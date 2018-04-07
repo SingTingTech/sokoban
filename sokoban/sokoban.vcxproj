@@ -161,7 +161,15 @@
     <ClInclude Include="map.h" />
     <ClInclude Include="my2d.h" />
     <ClInclude Include="Point.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="sokoban.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\cursors\Arrow.cur" />
+    <None Include="..\cursors\Hand.cur" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
