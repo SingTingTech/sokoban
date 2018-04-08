@@ -9,6 +9,12 @@ class DXInput {
 	CHAR m_keyBuffer[256] = { 0 };
 	DIMOUSESTATE m_mouseBuffer;
 public:
+	enum buttons {
+		LEFTBUTTON = 0,
+		RIGHTBUTTON,
+		MIDBUTTON
+	};
+
 	HRESULT inputIni(HINSTANCE hinst, HWND hwnd, DWORD keyboardCoop, DWORD mouseCoop);
 
 	HRESULT getInput();
