@@ -1,5 +1,5 @@
 #include"map.h"
-map::map(int width, int height)
+cris::map::map(int width, int height)
 {
 	mapWidth = width;
 	mapHeight = height;
@@ -14,8 +14,17 @@ map::map(int width, int height)
 	}
 }
 
-map::map(std::string fileName)
+cris::map::map(std::string fileName)
 {
+	/* 	@ == > 人 (man)
+	+ == > 人在目标点(man on goal)
+	$ == > 箱子(box)
+	* == > 箱子在目标点(box on goal)
+	# == > 墙 (wall)
+	. == > 目标点(goal)
+	- == > XSB格式空格代表“地板”，又因为连续多个空格在网页或即时通讯软件中偶尔显示有问题，
+	也用“ - ”或“_”代替空格。(floor, represented by ' ' or '-' or '_')
+	*/
 	int width = 0;
 	int height = 0;
 	int lineNum = 0;
@@ -41,7 +50,7 @@ map::map(std::string fileName)
 		mapContent[i] = new int[width];
 		for (int j = 0; j < width; j++)
 		{
-			mapContent[i][j] = 4;
+			mapContent[i][j] = 6;
 		}
 	}	int **p = mapContent;
 
@@ -68,6 +77,7 @@ map::map(std::string fileName)
 				break;
 
 			case '#':
+			
 				p[lineNum][i] = 4;
 				break;
 
@@ -95,80 +105,73 @@ map::map(std::string fileName)
 		}
 		lineNum++;
 	}
-
+	file.clear();
+	file.close();
 }
+//
+//void cris::map::readMapFromFile(std::string fileName)
+//{
+//
+//	std::string line;
+//	int **p = mapContent;
+//	int lineNum = 0;
+//	bool f = false;
+//	std::fstream file;
+//	file.open(fileName, std::ios::in);
+//	while (!file.eof()) {
+//		std::getline(file, line);
+//
+//		for (int i = 0; i < 50; i++)
+//		{
+//			switch (line[i])
+//			{
+//				//箱子
+//			case '$':
+//				p[lineNum][i] = 1;
+//				break;
+//				//人
+//			case '@':
+//				p[lineNum][i] = 2;
+//				break;
+//				//箱子在目标点
+//			case '*':
+//				p[lineNum][i] = 3;
+//				break;
+//				//墙
+//			case '#':
+//				p[lineNum][i] = 4;
+//				break;
+//				//目标点
+//			case '.':
+//				p[lineNum][i] = 5;
+//				break;
+//				//地板
+//			case '-':
+//			case '_':
+//			case ' ':
+//				p[lineNum][i] = 6;
+//				break;
+//
+//
+//				//+  7 人再目标点
+//			case '+':
+//				p[lineNum][i] = 7;;
+//				break;
+//
+//			default:
+//				f = true;
+//			}
+//			if (f)
+//			{
+//				f = false;
+//				break;
+//			}
+//		}
+//		lineNum++;
+//	}
+//}
 
-void map::readMapFromFile(std::string fileName)
-{
-	/* 	@ == > 人 (man)
-	+ == > 人在目标点(man on goal)
-	$ == > 箱子(box)
-	* == > 箱子在目标点(box on goal)
-	# == > 墙 (wall)
-	. == > 目标点(goal)
-	- == > XSB格式空格代表“地板”，又因为连续多个空格在网页或即时通讯软件中偶尔显示有问题，
-	也用“ - ”或“_”代替空格。(floor, represented by ' ' or '-' or '_')
-	*/
-	std::string line;
-	int **p = mapContent;
-	int lineNum = 0;
-	bool f = false;
-	std::fstream file;
-	file.open(fileName, std::ios::in);
-	while (!file.eof()) {
-		std::getline(file, line);
-
-		for (int i = 0; i < 50; i++)
-		{
-			switch (line[i])
-			{
-				//箱子
-			case '$':
-				p[lineNum][i] = 1;
-				break;
-				//人
-			case '@':
-				p[lineNum][i] = 2;
-				break;
-				//箱子在目标点
-			case '*':
-				p[lineNum][i] = 3;
-				break;
-				//墙
-			case '#':
-				p[lineNum][i] = 4;
-				break;
-				//目标点
-			case '.':
-				p[lineNum][i] = 5;
-				break;
-				//地板
-			case '-':
-			case '_':
-			case ' ':
-				p[lineNum][i] = 6;
-				break;
-
-
-				//+  7 人再目标点
-			case '+':
-				p[lineNum][i] = 7;;
-				break;
-
-			default:
-				f = true;
-			}
-			if (f)
-			{
-				f = false;
-				break;
-			}
-		}
-		lineNum++;
-	}
-}
-
-void map::printMap()
+void cris::map::printMap()
 {
 	int **p = mapContent;
 	for (int i = 0; i < mapHeight; i++)
@@ -213,19 +216,84 @@ void map::printMap()
 		std::cout << std::endl;
 	}
 }
-int ** map::getMapContent()
+
+void cris::map::getMapContent(int **buf, int bufSizeA, int bufSizeB)
 {
-	return mapContent;
+	if (bufSizeA < getHeight() || bufSizeB < getWidth())
+	{
+		std::cerr << "过小的buffer";
+		return;
+	}
+	else 
+	{
+		for (int i = 0; i < mapHeight; i++) 
+		{
+			for (int j = 0; j < mapWidth; i++) 
+			{
+				buf[i][j] = mapContent[i][j];
+			}
+		}
+	}
 }
-int map::getWidth()
+
+void cris::map::save(char * filepath, char * savename)
+{
+	std::ofstream fout;
+	char filename[1024] = { 0 };
+	strcpy_s(filename,1024, filepath);
+	int strscount = strlen(filename);
+	strcpy_s(strscount + filename,1024- strscount, savename);
+	fout.open(filename,std::ios::_Noreplace);
+	for (int i = 0; i < mapHeight; i++) 
+	{
+		for (int j = 0; j < mapWidth; j++) 
+		{
+			switch (mapContent[i][j])
+			{
+				//box
+			case 1:
+				fout<<'$';
+				break;
+				//human
+			case 2:
+				fout<<'@';
+				break;
+
+			case 3:
+				fout<<'*';
+				break;
+
+			case 4:
+				fout<<'#';
+				break;
+
+			case 5:
+				fout<<'.';
+				break;
+
+
+			case 6:
+				fout<<'_';
+				break;
+			case 7:
+				fout<<'+';
+				break;
+			}
+		}
+		fout << std::endl;
+	}
+}
+
+
+int cris::map::getWidth()
 {
 	return mapWidth;
 }
-int map::getHeight()
+int cris::map::getHeight()
 {
 	return mapHeight;
 }
-void map::getMenPos(Point*p)
+void cris::map::getMenPos(Point*p)
 {
 	bool b = false;
 	for (int i = 0; i < mapHeight; i++)
@@ -258,7 +326,7 @@ void map::getMenPos(Point*p)
 		}
 
 }
-void map::nextPos(direction d, Point p, Point *next) {
+void cris::map::nextPos(direction d, Point p, Point *next) {
 	
 	switch (d) {
 	case up:
@@ -279,7 +347,7 @@ void map::nextPos(direction d, Point p, Point *next) {
 
 
 }
-bool map::step(direction d)
+bool cris::map::step(direction d)
 {
 	Point men, n1, next2;
 
@@ -408,11 +476,99 @@ bool map::step(direction d)
 	}
 	return false;
 }
-map::~map()
+cris::map::~map()
 {
 	for (int i = 0; i < mapHeight; i++)
 	{
 		delete mapContent[i];
 	}
 	delete mapContent;
+}
+bool cris::map::jump(int i, int j) 
+{
+
+	Point start;
+	getMenPos(&start);
+	bool visited[50][50] = { false };
+	Point end = { i,j };
+	//bfs
+	Point cur = start;
+	std::queue<Point> queue;
+	while (!queue.empty()) 
+	{
+		queue.pop();
+	}
+	queue.push(cur);
+	while (!queue.empty()) 
+	{
+		cur = queue.front();
+		queue.pop();
+		if (cur.x == end.x&&cur.y == end.y) 
+		{
+			
+			switch (mapContent[start.x][start.y]) 
+			{
+				//人
+			case 2:
+				switch (mapContent[end.x][end.y])
+				{
+					//地板
+				case 6:
+					mapContent[start.x][start.y] = 6;
+					mapContent[end.x][end.y] = 2;
+					break;
+					//目标点
+				case 5:
+					mapContent[start.x][start.y] = 6;
+					mapContent[end.x][end.y] = 7;
+					break;
+				}
+				break;
+				//人在目标点
+			case 7:
+				switch (mapContent[end.x][end.y])
+				{
+					//地板
+				case 6:
+					mapContent[start.x][start.y] = 5;
+					mapContent[end.x][end.y] = 2;
+					break;
+					//目标点
+				case 5:
+					mapContent[start.x][start.y] = 5;
+					mapContent[end.x][end.y] = 7;
+					break;
+				}
+				break;
+			}
+				return true;
+		}
+		visited[cur.x][cur.y] = true;
+		Point p;
+		cur.up(p);
+		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y]&&mapContent[p.x][p.y]>4)
+		{
+			visited[p.x][p.y] = true;
+			queue.push(p);
+		}
+		cur.left(p);
+		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
+		{
+			visited[p.x][p.y] = true;
+			queue.push(p);
+		}
+		cur.down(p);
+		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
+		{
+			visited[p.x][p.y] = true;
+			queue.push(p);
+		}
+		cur.right(p);
+		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
+		{
+			visited[p.x][p.y] = true;
+			queue.push(p);
+		}
+	}
+	return false;
 }

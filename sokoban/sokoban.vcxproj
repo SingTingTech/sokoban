@@ -146,23 +146,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BitmapLoader.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="clientSokect.cpp" />
     <ClCompile Include="DXInput.cpp" />
-    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="Save.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="my2d.cpp" />
+    <ClCompile Include="mytime.cpp" />
     <ClCompile Include="Point.cpp" />
+    <ClCompile Include="user.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BitmapLoader.h" />
     <ClInclude Include="clientSocket.h" />
     <ClInclude Include="DXInput.h" />
-    <ClInclude Include="logger.h" />
+    <ClInclude Include="Save.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="my2d.h" />
+    <ClInclude Include="mytime.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="user.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sokoban.rc" />
@@ -170,6 +176,13 @@
   <ItemGroup>
     <None Include="..\cursors\Arrow.cur" />
     <None Include="..\cursors\Hand.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="PNG\Character4.png" />
+    <Image Include="PNG\Crate_Black.png" />
+    <Image Include="PNG\EndPoint_Black.png" />
+    <Image Include="PNG\Ground_Dirt.png" />
+    <Image Include="PNG\Wall_Black.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

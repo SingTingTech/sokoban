@@ -416,6 +416,7 @@ int ServerSocket(int Port)
 	int addrClientLen = sizeof(SOCKADDR_IN);
 	while (TRUE)
 	{
+		Sleep(10);
 		//新建一个socket，用于客户端  
 		SOCKET *sClient = new SOCKET;
 		//等待客户端的连接  
@@ -444,4 +445,5 @@ int ServerSocket(int Port)
 int main()
 {
 	ServerSocket(PORT);
+	std::cin.get();
 }

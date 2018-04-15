@@ -1,6 +1,6 @@
 #include "DXInput.h"
 
-HRESULT DXInput::inputIni(HINSTANCE hinst,HWND hwnd,DWORD keyboardCoop,DWORD mouseCoop)
+HRESULT cris::DXInput::inputIni(HINSTANCE hinst,HWND hwnd,DWORD keyboardCoop,DWORD mouseCoop)
 {
 	HRESULT hr;
 	HR(DirectInput8Create(hinst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDirectInput, NULL));
@@ -16,10 +16,10 @@ HRESULT DXInput::inputIni(HINSTANCE hinst,HWND hwnd,DWORD keyboardCoop,DWORD mou
 	HR(m_lpMouseDevice->SetDataFormat(&c_dfDIMouse));
 	HR(m_lpMouseDevice->Acquire());
 	HR(m_lpMouseDevice->Poll());
-
+	t.start();
 	return S_OK;
 }
-HRESULT DXInput::getInput() 
+HRESULT cris::DXInput::getInput() 
 {
 	HRESULT hr;
 	hr = m_lpKeyboardDevice->GetDeviceState(sizeof m_keyBuffer, (LPVOID)&m_keyBuffer);
@@ -39,33 +39,33 @@ HRESULT DXInput::getInput()
 	}
 }
 
-BOOL DXInput::isKeyDown(INT iKey) 
+BOOL cris::DXInput::isKeyDown(INT iKey) 
 {
 	return m_keyBuffer[iKey] & 0x80;
 }
 
-BOOL DXInput::isMouseButtonDown(INT iButton)
+BOOL cris::DXInput::isMouseButtonDown(INT iButton)
 {
 	return m_mouseBuffer.rgbButtons[iButton] & 0x80;
 }
 
-LONG DXInput::getMouseXCoordinate()
+LONG cris::DXInput::getMouseXCoordinate()
 {
 	return m_mouseBuffer.lX;
 }
 
-LONG DXInput::getMouseYCoordinate()
+LONG cris::DXInput::getMouseYCoordinate()
 {
 	return m_mouseBuffer.lY;
 }
 
-LONG DXInput::getMouseZCoordinate()
+LONG cris::DXInput::getMouseZCoordinate()
 {
 	
 	return m_mouseBuffer.lZ;
 }
 
-VOID DXInput::cleanUp()
+VOID cris::DXInput::cleanUp()
 {
 	if (m_lpKeyboardDevice!=NULL)
 		m_lpKeyboardDevice->Unacquire();

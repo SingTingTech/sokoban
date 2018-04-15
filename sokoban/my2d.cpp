@@ -1,17 +1,17 @@
 #include"my2d.h"
 
-my2d::my2d(HWND hwnd) {
+cris::my2d::my2d(HWND hwnd) {
 	// Obtain the size of the drawing area.
 	GetClientRect(hwnd, &clientrc);
 	this->hwnd = hwnd;
 
 }
 
-my2d::my2d() {
-
+cris::my2d::my2d() {
+	
 
 }
-HRESULT my2d::init(HWND hwnd) {
+HRESULT cris::my2d::init(HWND hwnd) {
 	GetClientRect(hwnd, &clientrc);
 	this->hwnd = hwnd;
 
@@ -30,6 +30,11 @@ HRESULT my2d::init(HWND hwnd) {
 		),
 		&pRT
 	);
+	DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(writeFactory), reinterpret_cast<IUnknown **>(&writeFactory));
+	writeFactory->CreateTextFormat(L"·½Õýß÷ÎØÌå", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 25, L"", &textNormal);
+	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &pGrayBrush);
+
+
 	if (SUCCEEDED(binit)) {
 		binit = hr;
 
