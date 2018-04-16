@@ -11,6 +11,7 @@ namespace cris {
 		Timer() 
 		{
 			QueryPerformanceFrequency(&freq);
+			start();
 		}
 		double timepassed;
 

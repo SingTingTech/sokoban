@@ -3,7 +3,7 @@ cris::Point::Point(int x,int y) {
 	this->x = x;
 	this->y = y;
 }
-cris::Point::Point(Point & p)
+cris::Point::Point(const Point & p)
 {
 	this->x = p.x;
 	this->y = p.y;

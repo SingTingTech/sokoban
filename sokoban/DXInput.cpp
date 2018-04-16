@@ -37,6 +37,7 @@ HRESULT cris::DXInput::getInput()
 		m_lpMouseDevice->Acquire();
 		HR(m_lpMouseDevice->GetDeviceState(sizeof m_mouseBuffer, (LPVOID)&m_mouseBuffer));
 	}
+	return S_OK;
 }
 
 BOOL cris::DXInput::isKeyDown(INT iKey) 

@@ -24,9 +24,20 @@
 #pragma comment(lib,"d2d1.lib")
 #pragma comment(lib,"dwrite.lib")
 
-#define IDB_HUMAN IDB_PNG1
+#define IDB_HUMAN_D2 IDB_PNG1
 #define IDB_GRUOND IDB_PNG4
 #define IDB_BOX IDB_PNG2
 #define IDB_TARGET IDB_PNG3
 #define IDB_WALL IDB_PNG5
+#define IDB_BOX_ON_TAR IDB_PNG6
+#define IDB_HUMAN_D11 IDB_PNG7
+#define IDB_HUMAN_D12 IDB_PNG8
+#define IDB_HUMAN_U2 IDB_PNG9
+#define IDB_HUMAN_U11 IDB_PNG10
+#define IDB_HUMAN_U12 IDB_PNG11
+#define IDB_HUMAN_L1 IDB_PNG12
+#define IDB_HUMAN_L2 IDB_PNG13
+#define IDB_HUMAN_R1 IDB_PNG14
+#define IDB_HUMAN_R2 IDB_PNG15
+
 #endif

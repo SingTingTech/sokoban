@@ -178,7 +178,18 @@
     <None Include="..\cursors\Hand.cur" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="PNG\Character4.png" />
+    <Image Include="PNG\character\d11.png" />
+    <Image Include="PNG\character\d12.png" />
+    <Image Include="PNG\character\d2.png" />
+    <Image Include="PNG\character\l1.png" />
+    <Image Include="PNG\character\l2.png" />
+    <Image Include="PNG\character\r1.png" />
+    <Image Include="PNG\character\r2.png" />
+    <Image Include="PNG\character\u11.png" />
+    <Image Include="PNG\character\u12.png" />
+    <Image Include="PNG\character\u2.png" />
+    <Image Include="PNG\d2.png" />
+    <Image Include="PNG\CrateDark_Gray.png" />
     <Image Include="PNG\Crate_Black.png" />
     <Image Include="PNG\EndPoint_Black.png" />
     <Image Include="PNG\Ground_Dirt.png" />

@@ -15,12 +15,23 @@ HWND hedit;
 HWND hpasswd;
 HWND hlist;
 SOCKET client;
-cris::BitmapLoader human;
+
+cris::BitmapLoader d2;
+cris::BitmapLoader d12;
+cris::BitmapLoader d11;
+cris::BitmapLoader u2;
+cris::BitmapLoader u12;
+cris::BitmapLoader u11;
+cris::BitmapLoader l1;
+cris::BitmapLoader l2;
+cris::BitmapLoader r1;
+cris::BitmapLoader r2;
+
 cris::BitmapLoader target;
 cris::BitmapLoader wall;
 cris::BitmapLoader ground;
 cris::BitmapLoader box;
-
+cris::BitmapLoader bot;
 //functions
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -31,10 +42,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	HCURSOR arrow = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYARROW));
 	HCURSOR hand = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYHAND));
 	cris::user u;
-	cris::Timer timer;
-	timer.start();
-	int freq = 0;
-	wchar_t buf[20] = { 0 };
+	
 	// Register the window class
 	WNDCLASSEX wc =
 	{
@@ -49,15 +57,35 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	HWND hwnd = CreateWindow(CLASSNAME, _T("SOKOBAN"),
 		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX, 100, 100, 800, 600,
 		NULL, NULL, hinst, NULL);
-
+	//初始化对象
 	my2ddraw.init(hwnd);
 	clientConnectIni(&client);
-	human.ini();
+	d2.ini();
+	d11.ini();
+	d12.ini();
+	u11.ini();
+	u12.ini();
+	u2.ini();
+	l1.ini();
+	l2.ini();
+	r1.ini();
+	r2.ini();
+
 	wall.ini();
 	ground.ini();
 	target.ini();
 	box.ini();
-	human.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN, 50, 0);
+	bot.ini();
+	d2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D2, 50, 0);
+	d12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D12, 50, 0);
+	d11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D11, 50, 0);
+	u2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U2, 50, 0);
+	u12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U12, 50, 0);
+	u11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U11, 50, 0);
+	l2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L2, 50, 0);
+	l1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L1, 50, 0);
+	r2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R2, 50, 0);
+	r1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R1, 50, 0);
 
 	box.loadPNG(hinst, my2ddraw.pRT, IDB_BOX, 50, 0);
 
@@ -66,10 +94,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	wall.loadPNG(hinst, my2ddraw.pRT, IDB_WALL, 50, 0);
 
 	ground.loadPNG(hinst, my2ddraw.pRT, IDB_GRUOND, 50, 0);
-	ShowWindow(hwnd, nCmdShow);
+	bot.loadPNG(hinst, my2ddraw.pRT, IDB_BOX_ON_TAR, 50, 0);
 	//*/
 
-
+	ShowWindow(hwnd, nCmdShow);
 
 	//*/
 	UpdateWindow(hwnd);
@@ -165,9 +193,11 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	};
 
 	//主界面渲染
-	auto fun3 = [hand,hwnd,&scenepre,&scene,&u,&freq,&timer,&buf]() 
+	auto fun3 = [hand,hwnd,&scenepre,&scene,&u]() 
 	{
-
+		static cris::Timer timer;
+		static int freq = 0;
+		static wchar_t buf[20] = { 0 };
 		const wchar_t * t1 = L"主界面";
 		my2ddraw.pRT->DrawText(t1, wcslen(t1),
 			my2ddraw.textNormal,
@@ -219,19 +249,32 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	//地图缓存
 	cris::map m(".\\maps\\screen.1");
 	//游戏界面渲染
-	int lastkey = -2;
+	
 
-	auto fun4 = [hinst,hwnd,&m,&freq,&timer,&buf,&lastkey]() 
+	auto fun4 = [hinst,hwnd,&m]() 
 	{
+		static cris::Timer timer;
+		static int freq = 0;
+		static wchar_t buf[20] = { 0 };
+		static cris::Timer t;
+		static bool phase1 = false;
+		static bool type1 = true;
+		using cris::direction;
+		using cris::down;
+		using cris::up;
+		using cris::left;
+		using cris::right;
+
+		static direction lastDirection = down;
 		POINT p;
 		int x = 0;
 		int y = 0;
-		//只load一次
 
 		int scaler;
 		scaler = m.getHeight() < m.getWidth() ? m.getWidth() : m.getHeight();
 		scaler = 600 / scaler;
-
+		
+		cris::BitmapLoader *b = &d2;
 
 
 		for (int i = 0; i < m.getHeight(); i++) 
@@ -242,18 +285,80 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				{
 					//箱子
 				case 1:
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
 					my2ddraw.pRT->DrawBitmap(box.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
 					break;
 					//人
 				case 2:
-					//37x59,
+					
 					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					//(59-37)/2/59+j*scaler,i*scaler,(j + 1) * scaler-(59-37)/2/59,(i + 1) * scaler
-					my2ddraw.pRT->DrawBitmap(human.pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59*scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+					if (!phase1) {
+						switch (lastDirection)
+						{
+						case down:
+							b = &d2;
+							break;
+						case right:
+							b = &r2;
+							break;
+						case up:
+							b = &u2;
+							break;
+						case left:
+							b = &l2;
+							break;
+						}
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+						
+
+					}
+					else 
+					{
+						switch (lastDirection)
+						{
+						case down:
+							
+							if (type1)
+								b = &d11;
+							else
+								b = &d12;
+							type1 = !type1;
+					
+							break;
+						case right:
+							b = &r1;
+					
+							break;
+						case up:
+							if(type1)
+								b = &u12;
+							else
+								b = &u11;
+							type1 = !type1;
+					
+							break;
+						case left:
+							b = &l1;
+							break;
+						}
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+
+
+
+						t.stop();
+						if (t.timepassed * 1000 > 500)
+						{
+							//enter phase2
+							phase1 = false;
+							t.start();
+						}
+					}
 					break;
 					//箱子在目标点
 				case 3:
-					my2ddraw.pRT->DrawBitmap(box.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(bot.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					
 					break;
 					//墙
 				case 4:
@@ -273,34 +378,99 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				case 7:
 					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
 					my2ddraw.pRT->DrawBitmap(target.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					my2ddraw.pRT->DrawBitmap(human.pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
-					break;
+					if (!phase1) {
+						switch (lastDirection)
+						{
+						case down:
+							b = &d2;
+							break;
+						case right:
+							b = &r2;
+							break;
+						case up:
+							b = &u2;
+							break;
+						case left:
+							b = &l2;
+							break;
+						}
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+
+
+					}
+					else
+					{
+						switch (lastDirection)
+						{
+						case down:
+
+							if (type1)
+								b = &d11;
+							else
+								b = &d12;
+							type1 = !type1;
+							break;
+						case right:
+							b = &r1;
+							break;
+						case up:
+							if (type1)
+								b = &u12;
+							else
+								b = &u11;
+							type1 = !type1;
+							break;
+						case left:
+							b = &l1;
+							break;
+						}
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+
+
+
+						t.stop();
+						if (t.timepassed * 1000 > 500)
+						{
+							//enter phase2
+							phase1 = false;
+							t.start();
+						}
+					}	break;
 					
 				}
 			}
 		}
 
 		input.getInput();
-		if (lastkey!=DIK_UP&& input.isKeyDown(DIK_UP)) 
+		static int lastkey = -2;
+		if (lastkey==-2&& input.isKeyDown(DIK_UP)) 
 		{
 			m.step(cris::up);
 			lastkey = DIK_UP;
+			lastDirection = up;
+			phase1 = true;
 		}
-		if (lastkey != DIK_DOWN&&input.isKeyDown(DIK_DOWN))
+		if (lastkey ==-2&&input.isKeyDown(DIK_DOWN))
 		{
 			m.step(cris::down);
 			lastkey = DIK_DOWN;
+			lastDirection = down;
+			phase1 = true;
 		}
-		if (lastkey != DIK_LEFT&&input.isKeyDown(DIK_LEFT))
+		if (lastkey ==-2 &&input.isKeyDown(DIK_LEFT))
 		{
 			m.step(cris::left);
 			lastkey = DIK_LEFT;
+			lastDirection = left;
+			phase1 = true;
 		}
-		if (lastkey != DIK_RIGHT&&input.isKeyDown(DIK_RIGHT))
+		if (lastkey ==-2&&input.isKeyDown(DIK_RIGHT))
 		{
 
 			m.step(cris::right);
 			lastkey = DIK_RIGHT;
+			lastDirection = right;
+			phase1 = true;
 		}
 		if (!(input.isKeyDown(DIK_RIGHT)| input.isKeyDown(DIK_LEFT)| input.isKeyDown(DIK_DOWN) | input.isKeyDown(DIK_UP) ))
 		{
@@ -523,7 +693,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				//test
 			case -1:
 				
-				my2ddraw.draw([hinst,&timer]() 
+				my2ddraw.draw([hinst]() 
 				{
 
 					
@@ -545,12 +715,21 @@ LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_DESTROY:
 		//app.cleanUp();
-		human.cleanup();
+		d2.cleanup();
+		d12.cleanup();
+		d11.cleanup();
+		u2.cleanup();
+		u12.cleanup();
+		u11.cleanup();
+		l1.cleanup();
+		l2.cleanup();
+		r1.cleanup();
+		r2.cleanup();
 		box.cleanup();
 		wall.cleanup();
 		target.cleanup();
 		ground.cleanup();
-
+		bot.cleanup();
 
 		input.cleanUp();
 		my2ddraw.cleanup();

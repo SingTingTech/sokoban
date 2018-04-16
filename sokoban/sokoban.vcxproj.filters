@@ -95,9 +95,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="PNG\Character4.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="PNG\Crate_Black.png">
       <Filter>资源文件</Filter>
     </Image>
@@ -108,6 +105,42 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="PNG\Wall_Black.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\CrateDark_Gray.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\d2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\d11.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\d12.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\u2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\u11.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\u12.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\l1.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\l2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\r1.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\d2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\character\r2.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
