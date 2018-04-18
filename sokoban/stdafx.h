@@ -10,13 +10,14 @@
 #include <tchar.h>
 #include <time.h>
 #include <ctime>
-#include<d2d1.h>
-#include<dwrite.h>
-#include<dinput.h>
-#include<queue>
-#include<wincodec.h>
-#include"resource.h"
+#include <d2d1.h>
+#include <dwrite.h>
+#include <dinput.h>
+#include <queue>
+#include <wincodec.h>
+#include "resource.h"
 
+#define __WINMAIN
 
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dinput8.lib")

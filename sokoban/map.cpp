@@ -355,10 +355,10 @@ bool cris::map::step(direction d)
 
 	nextPos(d, men,&n1);
 	nextPos(d, n1, &next2);
-	std::cout << n1.x;
-	std::cout << n1.y;
-	std::cout << next2.x;
-	std::cout << next2.y;
+	//std::cout << n1.x;
+	//std::cout << n1.y;
+	//std::cout << next2.x;
+	//std::cout << next2.y;
 	switch (mapContent[men.x][men.y])
 	{
 	case 2:

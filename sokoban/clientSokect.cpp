@@ -1,5 +1,7 @@
 #include"clientSocket.h"
 //SOCKET sServer;
+
+
 int clientConnectIni(SOCKET *sServer) 
 {
 	WSADATA wsa;

@@ -4,18 +4,24 @@
 #include"DXInput.h"
 #include"user.h"
 #include"BitmapLoader.h"
+#include"tools.h"
+using cris::direction;
+using cris::down;
+using cris::up;
+using cris::left;
+using cris::right;
 //constants
-#define CLASSNAME _T("hello world")
+#define CLASSNAME _T("sokoban")
 
-
+#ifndef __WINMAIN
 //globle vars
 cris::my2d my2ddraw = { 0 };
 cris::DXInput input;
 HWND hedit;
 HWND hpasswd;
 HWND hlist;
-SOCKET client;
-
+//SOCKET client;
+cris::MySocket client;
 cris::BitmapLoader d2;
 cris::BitmapLoader d12;
 cris::BitmapLoader d11;
@@ -35,98 +41,29 @@ cris::BitmapLoader bot;
 //functions
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void init(HWND hwnd, HINSTANCE hinst);
 
-
+void createWndAndUpdate(HWND *hwnd, HINSTANCE hinst, HCURSOR hCursor, int nCmdShow);
 INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	, LPSTR cmdLine, int nCmdShow) {
 	HCURSOR arrow = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYARROW));
 	HCURSOR hand = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYHAND));
+	cris::map m(".\\maps\\screen.1");
 	cris::user u;
-	
-	// Register the window class
-	WNDCLASSEX wc =
-	{
-		sizeof(WNDCLASSEX),CS_HREDRAW | CS_VREDRAW, windProc, 0L, 0L,
-		hinst, NULL, NULL, NULL, NULL,
-		CLASSNAME, NULL
-	};
-	wc.hCursor = arrow;
-	RegisterClassEx(&wc);
 
-	// Create the application's window
-	HWND hwnd = CreateWindow(CLASSNAME, _T("SOKOBAN"),
-		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX, 100, 100, 800, 600,
-		NULL, NULL, hinst, NULL);
-	//初始化对象
-	my2ddraw.init(hwnd);
-	clientConnectIni(&client);
-	d2.ini();
-	d11.ini();
-	d12.ini();
-	u11.ini();
-	u12.ini();
-	u2.ini();
-	l1.ini();
-	l2.ini();
-	r1.ini();
-	r2.ini();
-
-	wall.ini();
-	ground.ini();
-	target.ini();
-	box.ini();
-	bot.ini();
-	d2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D2, 50, 0);
-	d12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D12, 50, 0);
-	d11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D11, 50, 0);
-	u2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U2, 50, 0);
-	u12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U12, 50, 0);
-	u11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U11, 50, 0);
-	l2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L2, 50, 0);
-	l1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L1, 50, 0);
-	r2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R2, 50, 0);
-	r1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R1, 50, 0);
-
-	box.loadPNG(hinst, my2ddraw.pRT, IDB_BOX, 50, 0);
-
-	target.loadPNG(hinst, my2ddraw.pRT, IDB_TARGET, 50, 0);
-
-	wall.loadPNG(hinst, my2ddraw.pRT, IDB_WALL, 50, 0);
-
-	ground.loadPNG(hinst, my2ddraw.pRT, IDB_GRUOND, 50, 0);
-	bot.loadPNG(hinst, my2ddraw.pRT, IDB_BOX_ON_TAR, 50, 0);
-	//*/
-
-	ShowWindow(hwnd, nCmdShow);
-
-	//*/
-	UpdateWindow(hwnd);
-
-	input.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-	/*/测试登陆和注册；
-	{
-		char buf[1024];
-		buf[0] = 'l';
-		sprintf_s(buf+1, 20, "%s","hello");
-		sprintf_s(buf + 21, 29, "%s", "world");
-		//注册测试
-		clientSend(client, buf, 1024);
-		memset(buf, 0, 1024);
-		clientRecv(client, buf, 1024);
-
-	}
-	//*/
+	//收集存档信息
 
 	int scene = 3;//默认主菜单
 	int scenepre = -1;//此前界面用于win32api界面不清屏
+	// 
+	HWND hwnd;
+
+	createWndAndUpdate(&hwnd, hinst, arrow, nCmdShow);
+	init(hwnd,hinst);
+
+
+
 	
-	//wchar_t t[64] = L"";
-	//char c[128];
-
-	//std::cin >> c;
-	//MultiByteToWideChar(0, 0, c, 128, t, 64);
-
-
 	//存档选择界面渲染代码
 	auto fun0 = []()//mutable
 	{
@@ -147,15 +84,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			my2ddraw.textNormal,
 			D2D1::RectF(440, 350, 654, 375),
 			my2ddraw.pGrayBrush);
-
-
-		//调试输出
-		//wchar_t buf[20] = { 0 };
-		//wsprintf(buf, L"%d%d", input.isMouseButtonDown(DXInput::MIDBUTTON), y);
-		//my2ddraw.pRT->DrawText(buf,20,
-		//	text_normal,
-		//	D2D1::RectF(0,0, size.width / 4, size.height/4),
-		//	pbrush);
 
 	};
 	//注册界面渲染代码
@@ -187,9 +115,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		my2ddraw.pRT->DrawText(t5, wcslen(t3),
 				my2ddraw.textNormal,
 				D2D1::RectF(400, 400, 450, 425),
-				my2ddraw.pGrayBrush);
-	
-	
+				my2ddraw.pGrayBrush);	
 	};
 
 	//主界面渲染
@@ -209,6 +135,15 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			my2ddraw.textNormal,
 			D2D1::RectF(275, 200, 375, 225),
 			my2ddraw.pGrayBrush);
+
+		wchar_t t3[21] = { 0 };
+		MultiByteToWideChar(CP_ACP,0, u.username.c_str(),u.username.length(),t3,21);
+		my2ddraw.pRT->DrawText(t3, 21,
+			my2ddraw.textNormal,
+			D2D1::RectF(0, 0, 400, 25),
+			my2ddraw.pGrayBrush);
+
+
 		//帧数监测
 		freq++;
 		timer.stop();
@@ -218,39 +153,18 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			freq = 0;
 			timer.start();
 		}
-	
+		
 		my2ddraw.pRT->DrawText(buf, 20,
 			my2ddraw.textNormal,
-			D2D1::RectF(0, 0, 400, 25),
+			D2D1::RectF(765, 0, 800, 25),
 			my2ddraw.pGrayBrush);
 
-		//鼠标监测	
-		POINT p;
-		input.getInput();
-		GetCursorPos(&p);
-		ScreenToClient(hwnd, &p);
-		int x = p.x;
-		int y = p.y;
-
-
-		//开始游戏(275, 200, 375, 225),
-		if (x < 375 && x>200 && y > 200 && y < 225)
-		{
-			SetCursor(hand);
-			if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-			{
-				scenepre = 3;
-				scene = 4;
-			}
-		}
 	
 
 	};
 	//地图缓存
-	cris::map m(".\\maps\\screen.1");
-	//游戏界面渲染
-	
 
+	//游戏界面渲染
 	auto fun4 = [hinst,hwnd,&m]() 
 	{
 		static cris::Timer timer;
@@ -259,13 +173,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		static cris::Timer t;
 		static bool phase1 = false;
 		static bool type1 = true;
-		using cris::direction;
-		using cris::down;
-		using cris::up;
-		using cris::left;
-		using cris::right;
-
 		static direction lastDirection = down;
+
 		POINT p;
 		int x = 0;
 		int y = 0;
@@ -276,7 +185,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		
 		cris::BitmapLoader *b = &d2;
 
-
+		//*/画游戏区域
 		for (int i = 0; i < m.getHeight(); i++) 
 		{
 			for (int j = 0; j < m.getWidth(); j++) 
@@ -309,8 +218,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							break;
 						}
 						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
-						
-
 					}
 					else 
 					{
@@ -342,8 +249,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							break;
 						}
 						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
-
-
 
 						t.stop();
 						if (t.timepassed * 1000 > 500)
@@ -395,8 +300,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							break;
 						}
 						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
-
-
 					}
 					else
 					{
@@ -425,9 +328,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							break;
 						}
 						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
-
-
-
 						t.stop();
 						if (t.timepassed * 1000 > 500)
 						{
@@ -441,12 +341,46 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			}
 		}
 
+		if (m.isComplete())
+		{
+			const wchar_t * t2 = L"完成";
+			my2ddraw.pRT->DrawText(t2, wcslen(t2),
+				my2ddraw.textNormal,
+				D2D1::RectF(0, 100, 100, 125),
+				my2ddraw.pGrayBrush);
+		}
+
+		//*/帧数统计
+		freq++;
+		timer.stop();
+		if (timer.timepassed * 1000 >= 500)
+		{
+			//wsprintf(buf, L"freq:%d", freq * 2);
+			freq = 0;
+			timer.start();
+		}
+
+		//my2ddraw.pRT->DrawText(buf, 20,
+		//	my2ddraw.textNormal,
+		//	D2D1::RectF(0, 0, 400, 25),
+		//	my2ddraw.pGrayBrush);
+		//*/帧数统计
+
+		//*/画游戏区域
+
+		//*/键盘控制
 		input.getInput();
-		static int lastkey = -2;
+		static int lastkey = -2;//指示按键是否有效
+
+		wsprintf(buf, L"last:%d", lastkey);
+		my2ddraw.pRT->DrawText(buf, 20,
+			my2ddraw.textNormal,
+			D2D1::RectF(0,100, 400, 125),
+			my2ddraw.pGrayBrush);
 		if (lastkey==-2&& input.isKeyDown(DIK_UP)) 
 		{
 			m.step(cris::up);
-			lastkey = DIK_UP;
+			lastkey = DIK_UP;//有键按下后任何按键无效
 			lastDirection = up;
 			phase1 = true;
 		}
@@ -466,17 +400,17 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		}
 		if (lastkey ==-2&&input.isKeyDown(DIK_RIGHT))
 		{
-
 			m.step(cris::right);
 			lastkey = DIK_RIGHT;
 			lastDirection = right;
 			phase1 = true;
 		}
-		if (!(input.isKeyDown(DIK_RIGHT)| input.isKeyDown(DIK_LEFT)| input.isKeyDown(DIK_DOWN) | input.isKeyDown(DIK_UP) ))
+		if (!(input.isKeyDown(DIK_RIGHT)| input.isKeyDown(DIK_LEFT)| input.isKeyDown(DIK_DOWN) | input.isKeyDown(DIK_UP) ))//若所有按键均松开则接下来的按键有效
 		{
 			lastkey = -2;
 		}
-		static bool click = false;
+		//鼠标点击
+		static bool click = false;//指示鼠标点击是否有效
 		if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
 		{
 			if (click) {
@@ -496,33 +430,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		{
 			click = true;
 		}
-		
-
-
-		if (m.isComplete())
-		{
-			const wchar_t * t2 = L"完成";
-			my2ddraw.pRT->DrawText(t2, wcslen(t2),
-				my2ddraw.textNormal,
-				D2D1::RectF(0, 100, 100, 125),
-				my2ddraw.pGrayBrush);
-		}
-		freq++;
-		timer.stop();
-		if (timer.timepassed * 1000 >= 500)
-		{
-			wsprintf(buf, L"freq:%d", freq*2);
-			freq = 0;
-			timer.start();
-		}
-
-		my2ddraw.pRT->DrawText(buf, 20,
-			my2ddraw.textNormal,
-			D2D1::RectF(0, 0, 400, 25),
-			my2ddraw.pGrayBrush);
 
 	};
-
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
 	{
@@ -534,8 +443,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		else
 		{
 			switch (scene) {
-
-			case 0://存档选择界面
+			//*/存档选择界面
+			case 0:
 			{
 			
 				if (scenepre != 0)
@@ -544,6 +453,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					EnableWindow(hlist, true);
 					scenepre = 0;
 				}
+
 				//鼠标监测	
 				POINT p;
 				input.getInput();
@@ -551,7 +461,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				ScreenToClient(hwnd, &p);
 				int x = p.x;
 				int y = p.y;
-
 
 				//登陆
 				if (x > 200 && x < 400 && y>150 && y < 450)
@@ -578,12 +487,22 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 						EnableWindow(hlist, false);
 					}
 				}
+
 				//选择这个存档
 				if (x <575 && x>440&& y > 350 && y < 375)
 				{
 					SetCursor(hand);
 					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON)) 
 					{
+						wchar_t	wselected[20] = { 0 };
+						HRESULT hr;
+						hr = SendMessage(hlist, LB_GETCURSEL, 0, 0);
+						SendMessage(hlist, LB_GETTEXT, hr, (LPARAM)wselected);
+						char selected[20] = { 0 };
+						WideCharToMultiByte(CP_ACP, 0, wselected, 20, selected, 20, NULL, NULL);
+						u.read(selected);
+						u.login();
+
 						scenepre = 0;
 						scene = 3;
 						EnableWindow(hlist, false);
@@ -593,6 +512,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 
 				break;
 			}
+
+			//*/注册界面
 			case 2:
 			{
 				if (scenepre != 2)
@@ -630,31 +551,38 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 						WideCharToMultiByte(CP_ACP, 0, wpasswd, 29, passwd, 29, 0, 0);
 						strcpy_s(buf + 1, 20, username);
 						strcpy_s(buf + 21, 29, passwd);
-
-						//注册测试
-						clientSend(client, buf, 1024);
+						if (!strcmp(passwd, "")) {
+							MessageBox(hwnd, L"密码不能为空！", L"注册失败！", MB_OK);
+							break;
+						}
+						//注册
+						client.clientSend( buf, 1024);
 						memset(buf, 0, 1024);
-						clientRecv(client, buf, 1024);
+						client.clientRecv( buf, 1024);
 						if (buf[0] == 0)
 						{
 							MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
+							break;
 						}
 						if (buf[1] == 't')
 						{
 
 							u.username = username;
 							u.passwd = passwd;
-							u.current = 0;
+							u.current = -1;
 							u.lurd = "";
 							u.save();
 							//注册成功
 							MessageBox(hwnd, L"注册成功！", L"注册成功！", MB_OK);
+							EnableWindow(hedit, false);
+							EnableWindow(hpasswd, false);
 							scene = 3;
 						}
 						else
 						{
 							//注册失败
 							MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
+							break;
 						}
 
 
@@ -675,8 +603,12 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				Sleep(10);
 				break;
 			}
-			//主界面
+			//*/注册界面
+
+
+			//*/主界面
 			case 3:
+			{
 				//监测是否已有用户登陆
 				if (!u.getLogin()) {
 					scene = 0;
@@ -684,12 +616,45 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				}
 
 				my2ddraw.draw(fun3);
+
+				//鼠标监测	
+				POINT p;
+				input.getInput();
+				GetCursorPos(&p);
+				ScreenToClient(hwnd, &p);
+				int x = p.x;
+				int y = p.y;
+
+
+				//开始游戏(275, 200, 375, 225),
+				if (x < 375 && x>200 && y > 200 && y < 225)
+				{
+					SetCursor(hand);
+					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
+					{
+						scenepre = 3;
+						scene = 4;
+					}
+				}
+				//重选存档 0, 0, 400, 25
+				if (x < 12.5*u.username.length() && x>0 && y > 0 && y < 25)
+				{
+					SetCursor(hand);
+					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
+					{
+						scenepre = 3;
+						scene = 0;
+					}
+				}
 				break;
 
-
+			}
+			//*/游戏界面
 			case 4:
 				my2ddraw.draw(fun4);
 				break;
+
+
 				//test
 			case -1:
 				
@@ -706,7 +671,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		}
 
 	}
-
+	return 0;
 }
 //function implements
 LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -733,21 +698,76 @@ LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		input.cleanUp();
 		my2ddraw.cleanup();
-		clientCloseConnect(client);
+		client.clientCloseConnect();
 
 		PostQuitMessage(0);
 		return 0;
 	case WM_CREATE:
 		hedit = CreateWindow(L"edit", 0, WS_CHILD | WS_VISIBLE | WS_BORDER, 300, 200, 200, 25, hwnd, 0, 0, 0);
 		EnableWindow(hedit, false);
-		hpasswd = CreateWindow(L"edit", 0, WS_CHILD | WS_VISIBLE | WS_BORDER|ES_PASSWORD,300, 300, 200, 25, hwnd, 0, 0, 0);
+		hpasswd = CreateWindow(L"edit", 0, WS_CHILD| WS_VISIBLE | WS_BORDER|ES_PASSWORD,300, 300, 200, 25, hwnd, 0, 0, 0);
 		EnableWindow(hpasswd, false);
 		hlist = CreateWindow(L"listbox", NULL, LBS_NOTIFY | WS_CHILD | WS_VISIBLE | LBS_STANDARD,200, 150, 200, 300, hwnd, 0, ((LPCREATESTRUCT)lParam)->hInstance, 0);
 		EnableWindow(hlist, false);
-
+		
 
 		
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 }
+void createWndAndUpdate(HWND *hwnd, HINSTANCE hinst, HCURSOR hCursor, int nCmdShow)
+{
+	WNDCLASSEX wc =
+	{
+		sizeof(WNDCLASSEX),CS_HREDRAW | CS_VREDRAW, windProc, 0L, 0L,
+		hinst, NULL, NULL, NULL, NULL,
+		CLASSNAME, NULL
+	};
+	wc.hCursor = hCursor;
+	RegisterClassEx(&wc);
+
+	// Create the application's window
+	*hwnd = CreateWindow(CLASSNAME, _T("SOKOBAN"),
+		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX, 100, 100, 800, 600,
+		NULL, NULL, hinst, NULL);
+
+
+	ShowWindow(*hwnd, nCmdShow);
+	UpdateWindow(*hwnd);
+}
+void init(HWND hwnd, HINSTANCE hinst)
+{
+
+	client.clientConnectIni();
+	my2ddraw.init(hwnd);
+	d2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D2, 50, 0);
+	d12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D12, 50, 0);
+	d11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D11, 50, 0);
+	u2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U2, 50, 0);
+	u12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U12, 50, 0);
+	u11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U11, 50, 0);
+	l2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L2, 50, 0);
+	l1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L1, 50, 0);
+	r2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R2, 50, 0);
+	r1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R1, 50, 0);
+	box.loadPNG(hinst, my2ddraw.pRT, IDB_BOX, 50, 0);
+	target.loadPNG(hinst, my2ddraw.pRT, IDB_TARGET, 50, 0);
+	wall.loadPNG(hinst, my2ddraw.pRT, IDB_WALL, 50, 0);
+	ground.loadPNG(hinst, my2ddraw.pRT, IDB_GRUOND, 50, 0);
+	bot.loadPNG(hinst, my2ddraw.pRT, IDB_BOX_ON_TAR, 50, 0);
+	//*/
+	//dinput
+	input.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+
+	std::vector<std::string> saves;
+	wchar_t savepath[] = L".\\save";
+	cris::findSaves(savepath, saves);
+	for (auto it = saves.begin(); it != saves.end(); it++)
+	{
+		wchar_t c[20] = { 0 };
+		MultiByteToWideChar(CP_ACP, 0, it->c_str(), it->length() - 5, c, 260);
+		SendMessage(hlist, LB_ADDSTRING, 0, (LPARAM)c);
+	}
+}
+#endif // !__WINMAIN

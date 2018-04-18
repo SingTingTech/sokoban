@@ -28,12 +28,20 @@ namespace cris {
 		}
 		void loadPNG(HINSTANCE hinst,ID2D1RenderTarget *pRT,int resourcename,UINT targetHeight,UINT targetWidth)
 		{
+			// Initialize COM
+			CoInitialize(NULL);
+			// Create the COM imaging factory
+			HRESULT hr = CoCreateInstance(
+				CLSID_WICImagingFactory,
+				NULL,
+				CLSCTX_INPROC_SERVER,
+				IID_PPV_ARGS(&pFactory)
+			);
 			prt = pRT;
 			HRSRC imageResHandle = NULL;
 			HGLOBAL imageResDataHandle = NULL;
 			void *pImageFile = NULL;
 			DWORD imageFileSize = 0;
-			HRESULT hr;
 
 			// Locate the resource.
 			imageResHandle = FindResource(hinst, MAKEINTRESOURCE(resourcename), L"PNG");

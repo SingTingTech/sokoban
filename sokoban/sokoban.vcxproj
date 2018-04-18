@@ -149,17 +149,21 @@
     <ClCompile Include="BitmapLoader.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="clientSokect.cpp" />
+    <ClCompile Include="Control.cpp" />
     <ClCompile Include="DXInput.cpp" />
+    <ClCompile Include="maintest.cpp" />
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="my2d.cpp" />
     <ClCompile Include="mytime.cpp" />
     <ClCompile Include="Point.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="user.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BitmapLoader.h" />
     <ClInclude Include="clientSocket.h" />
+    <ClInclude Include="Control.h" />
     <ClInclude Include="DXInput.h" />
     <ClInclude Include="Save.h" />
     <ClInclude Include="map.h" />
@@ -168,6 +172,7 @@
     <ClInclude Include="Point.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="tools.h" />
     <ClInclude Include="user.h" />
   </ItemGroup>
   <ItemGroup>
