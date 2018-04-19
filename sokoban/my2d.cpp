@@ -32,7 +32,14 @@ HRESULT cris::my2d::init(HWND hwnd) {
 	);
 	DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(writeFactory), reinterpret_cast<IUnknown **>(&writeFactory));
 	writeFactory->CreateTextFormat(L"方正喵呜体", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 25, L"", &textNormal);
+	writeFactory->CreateTextFormat(L"方正喵呜体", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 20, L"", &textSmall);
+	writeFactory->CreateTextFormat(L"方正喵呜体", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 40, L"", &textLarge);
+
+	
 	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &pGrayBrush);
+	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Pink), &pLightBrush);
+	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightBlue), &pDarkBrush);
+	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightGreen), &pListBrush);
 
 
 	if (SUCCEEDED(binit)) {

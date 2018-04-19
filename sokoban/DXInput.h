@@ -22,6 +22,11 @@ namespace cris {
 
 		HRESULT inputIni(HINSTANCE hinst, HWND hwnd, DWORD keyboardCoop, DWORD mouseCoop);
 
+		HRESULT inputIni(HINSTANCE hinst, HWND hwnd) 
+		{
+
+			return inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+		}
 		HRESULT getInput();
 
 		BOOL isKeyDown(INT iKey);

@@ -8,8 +8,11 @@
 #define CLASSNAME _T("sokoban")
 
 //globle vars
+cris::DXInput dinput;
 cris::my2d my2ddraw = { 0 };
 cris::EditControl edit = { 300,200,200,25 };
+cris::TextControl text = { 100,200,200,25,L"hello" };
+cris::ListControl list = { 300,300,200,50};
 //functions
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -20,17 +23,27 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	, LPSTR cmdLine, int nCmdShow) {
 	HCURSOR arrow = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYARROW));
 	HCURSOR hand = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYHAND));
-	edit.setCursor(hand);
+	
 	//收集存档信息
 	// 
 	HWND hwnd;
 
 	createWndAndUpdate(&hwnd, hinst, arrow, nCmdShow);
-	edit.setWnd(hwnd);
+
 	init(hwnd, hinst);
+	edit.setCursor(hand);
+	edit.setWnd(hwnd);
+	text.setCursor(hand);
+	text.setWnd(hwnd);
+	list.setWnd(hwnd);
+	list.setCursor(hand);
 
-
-
+	list.addstring("hello");
+	list.addstring("world");
+	list.addstring("i'm");
+	list.addstring("cirs");
+	list.setselect(2);
+	list.setMove(1);
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
 	{
@@ -44,6 +57,15 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			my2ddraw.draw([]()
 			{
 				edit.draw(my2ddraw);
+				text.draw(my2ddraw);
+				text.testKeys(dinput,[]() {
+					MessageBox(0, L"", 0, 0 );				
+				});
+				
+				list.draw(my2ddraw);
+				list.testKeys(dinput, []() {});
+
+
 			});
 			Sleep(100);
 
@@ -61,24 +83,11 @@ LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		edit.onInput(wParam);
 		break;
 	case WM_DESTROY:
-
+		dinput.cleanUp();
 		my2ddraw.cleanup();
 		PostQuitMessage(0);
 		return 0;
-	case WM_CREATE: {
-		POINT p;
-		p.x = 400;
-		p.y = 300;
-		ClientToScreen(hwnd, &p);
-		HIMC himc = ImmGetContext(hwnd);
-		CANDIDATEFORM cand;
-		cand.dwIndex = 0;
-		cand.dwStyle = CFS_CANDIDATEPOS;
-		cand.ptCurrentPos = p;
-		int i = ImmSetCandidateWindow(himc, &cand);
-		ImmReleaseContext(hwnd, himc);
-		break;
-	}
+
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -107,6 +116,7 @@ void init(HWND hwnd, HINSTANCE hinst)
 {
 
 	my2ddraw.init(hwnd);
+	dinput.inputIni(hinst, hwnd);
 }
 #endif // __WINMAIN
 
