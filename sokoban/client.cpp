@@ -5,6 +5,8 @@
 #include"user.h"
 #include"BitmapLoader.h"
 #include"tools.h"
+
+#include"Control.h"
 using cris::direction;
 using cris::down;
 using cris::up;
@@ -19,7 +21,6 @@ cris::my2d my2ddraw = { 0 };
 cris::DXInput input;
 HWND hedit;
 HWND hpasswd;
-HWND hlist;
 //SOCKET client;
 cris::MySocket client;
 cris::BitmapLoader d2;
@@ -38,20 +39,49 @@ cris::BitmapLoader wall;
 cris::BitmapLoader ground;
 cris::BitmapLoader box;
 cris::BitmapLoader bot;
+
+cris::EditControl username = { 300, 200, 200, 25, 1 ,cris::EditControl::NORMAL };
+cris::EditControl passwd = { 300, 300, 200, 25, 2 ,cris::EditControl::PASSWD };
+
 //functions
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+inline void loadsaves(cris::ListControl &userlist)
+{
+	std::vector<std::string> saves;
+	wchar_t savepath[] = L".\\save";
+	cris::findSaves(savepath, saves);
+	for (auto it = saves.begin(); it != saves.end(); it++)
+	{
+		it->erase(it->end() - 5, it->end());
+		userlist.addstring(*it);
+	}
+
+}
 void init(HWND hwnd, HINSTANCE hinst);
+unsigned int cris::EditControl::focus = -1;
 
 void createWndAndUpdate(HWND *hwnd, HINSTANCE hinst, HCURSOR hCursor, int nCmdShow);
 INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	, LPSTR cmdLine, int nCmdShow) {
 	HCURSOR arrow = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYARROW));
 	HCURSOR hand = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYHAND));
+	HCURSOR ibeam = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYIBEAM));
+
 	cris::map m(".\\maps\\screen.1");
 	cris::user u;
+	
+	cris::ListControl userlist = { 200, 150, 200, 300 };
+	cris::TextControl login = { 425, 150,200,25,L"使用一个账号登陆" };
+	cris::TextControl create = { 425, 250,175,25, L"创建一个新存档" };
+	cris::TextControl choose = { 425, 350,150,25, L"选择这个存档" };
+	cris::TextControl submit = { 300, 400,50,25, L"提交" };
+	cris::TextControl back = { 400, 400,50,25, L"返回" };
+	cris::TextControl title = { 300, 100,75,25, L"推箱子"};
+	cris::TextControl start = { 275, 200,100,25,L"开始游戏" };
+	cris::TextControl usertitle = { 0,0,400,25,L""};
+//收集存档信息
 
-	//收集存档信息
 
 	int scene = 3;//默认主菜单
 	int scenepre = -1;//此前界面用于win32api界面不清屏
@@ -59,105 +89,92 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	HWND hwnd;
 
 	createWndAndUpdate(&hwnd, hinst, arrow, nCmdShow);
+
+	start.setWnd(hwnd);
+	start.setCursor(hand);
+
+	userlist.setWnd(hwnd);
+	userlist.setCursor(hand);
+	loadsaves(userlist);
+
+	login.setWnd(hwnd);
+	login.setCursor(hand);
+	
+	create.setWnd(hwnd);
+	create.setCursor(hand);
+	
+	choose.setWnd(hwnd);
+	choose.setCursor(hand);
+
+	submit.setWnd(hwnd);
+	submit.setCursor(hand);
+
+	back.setWnd(hwnd);
+	back.setCursor(hand);
+
+	username.setWnd(hwnd);
+	username.setCursor(ibeam);
+
+	passwd.setWnd(hwnd);
+	passwd.setCursor(ibeam);
+
+
 	init(hwnd,hinst);
 
 
 
 	
 	//存档选择界面渲染代码
-	auto fun0 = []()//mutable
+	auto fun0 = [&]()//mutable
 	{
 		input.getInput();
-	
-		const wchar_t * t3 = L"使用一个账号登陆";
-		const wchar_t * t1 = L"创建一个新存档";
-		const wchar_t * t2 = L"选择这个存档";
-		my2ddraw.pRT->DrawText(t3, wcslen(t3),
-			my2ddraw.textNormal,
-			D2D1::RectF(425, 150, 654, 175),
-			my2ddraw.pGrayBrush);
-		my2ddraw.pRT->DrawText(t1, wcslen(t1),
-			my2ddraw.textNormal,
-			D2D1::RectF(425, 250, 654, 275),
-			my2ddraw.pGrayBrush);
-		my2ddraw.pRT->DrawText(t2, wcslen(t2),
-			my2ddraw.textNormal,
-			D2D1::RectF(440, 350, 654, 375),
-			my2ddraw.pGrayBrush);
+		userlist.draw(my2ddraw);
+		login.draw(my2ddraw);
+		create.draw(my2ddraw);
+		choose.draw(my2ddraw);
 
 	};
 	//注册界面渲染代码
-	auto fun2 = []() 
+	auto fun2 = [&]() 
 	{
-		const wchar_t * t1 = L"注册";
-		const wchar_t * t2 = L"用户名:";
-		const wchar_t * t3 = L"密码:";
-		const wchar_t * t4 = L"提交";
-		const wchar_t * t5 = L"返回";
 
+		cris::TextControl title = { 376,100,50,25,L"注册" };
+		cris::TextControl username1 = { 225, 200,75,25,L"用户名:" };
+		cris::TextControl password1 = { 225, 300,75,25,L"密码:" };
+		submit.draw(my2ddraw);
+		back.draw(my2ddraw);
+		title.draw(my2ddraw);
+		password1.draw(my2ddraw);
+		username1.draw(my2ddraw);
+		username.draw(my2ddraw);
+		passwd.draw(my2ddraw);
 
-		my2ddraw.pRT->DrawText(t1, wcslen(t1),
-			my2ddraw.textNormal,
-			D2D1::RectF(376,100,444,200),
-			my2ddraw.pGrayBrush);
-		my2ddraw.pRT->DrawText(t2, wcslen(t2),
-			my2ddraw.textNormal,
-			D2D1::RectF(200, 200, 300, 225),
-			my2ddraw.pGrayBrush);
-		my2ddraw.pRT->DrawText(t3, wcslen(t3),
-			my2ddraw.textNormal,
-			D2D1::RectF(225, 300, 300, 325),
-			my2ddraw.pGrayBrush);
-		my2ddraw.pRT->DrawText(t4, wcslen(t3),
-			my2ddraw.textNormal,
-			D2D1::RectF(300, 400, 350, 425),
-			my2ddraw.pGrayBrush);		
-		my2ddraw.pRT->DrawText(t5, wcslen(t3),
-				my2ddraw.textNormal,
-				D2D1::RectF(400, 400, 450, 425),
-				my2ddraw.pGrayBrush);	
 	};
 
 	//主界面渲染
-	auto fun3 = [hand,hwnd,&scenepre,&scene,&u]() 
+	auto fun3 = [&]() 
 	{
 		static cris::Timer timer;
 		static int freq = 0;
 		static wchar_t buf[20] = { 0 };
-		const wchar_t * t1 = L"主界面";
-		my2ddraw.pRT->DrawText(t1, wcslen(t1),
-			my2ddraw.textNormal,
-			D2D1::RectF(300, 100, 375, 200),
-			my2ddraw.pGrayBrush);
+		static cris::TextControl freqx = { 765, 0,35,25,L"" };
 
-		const wchar_t * t2 = L"开始游戏";
-		my2ddraw.pRT->DrawText(t2, wcslen(t2),
-			my2ddraw.textNormal,
-			D2D1::RectF(275, 200, 375, 225),
-			my2ddraw.pGrayBrush);
-
-		wchar_t t3[21] = { 0 };
-		MultiByteToWideChar(CP_ACP,0, u.username.c_str(),u.username.length(),t3,21);
-		my2ddraw.pRT->DrawText(t3, 21,
-			my2ddraw.textNormal,
-			D2D1::RectF(0, 0, 400, 25),
-			my2ddraw.pGrayBrush);
-
-
+		usertitle << u.username;
+		title.draw(my2ddraw);
+		start.draw(my2ddraw);
+		usertitle.draw(my2ddraw);
 		//帧数监测
 		freq++;
 		timer.stop();
-		if (timer.timepassed * 1000 >= 1000) 
+		if (timer.timepassed * 1000 >=500) 
 		{
-			wsprintf(buf, L"%d", freq);
+			freqx << freq*2;
 			freq = 0;
 			timer.start();
-		}
 		
-		my2ddraw.pRT->DrawText(buf, 20,
-			my2ddraw.textNormal,
-			D2D1::RectF(765, 0, 800, 25),
-			my2ddraw.pGrayBrush);
+		}	
+
+		freqx.draw(my2ddraw);
 
 	
 
@@ -165,7 +182,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	//地图缓存
 
 	//游戏界面渲染
-	auto fun4 = [hinst,hwnd,&m]() 
+	auto fun4 = [hwnd,&m]() 
 	{
 		static cris::Timer timer;
 		static int freq = 0;
@@ -341,6 +358,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			}
 		}
 
+
+		//监测是否已完成
 		if (m.isComplete())
 		{
 			const wchar_t * t2 = L"完成";
@@ -372,11 +391,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		input.getInput();
 		static int lastkey = -2;//指示按键是否有效
 
-		wsprintf(buf, L"last:%d", lastkey);
-		my2ddraw.pRT->DrawText(buf, 20,
-			my2ddraw.textNormal,
-			D2D1::RectF(0,100, 400, 125),
-			my2ddraw.pGrayBrush);
 		if (lastkey==-2&& input.isKeyDown(DIK_UP)) 
 		{
 			m.step(cris::up);
@@ -446,161 +460,83 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			//*/存档选择界面
 			case 0:
 			{
+				my2ddraw.draw(fun0);
 			
-				if (scenepre != 0)
-				{
-					my2ddraw.draw(fun0);
-					EnableWindow(hlist, true);
-					scenepre = 0;
-				}
-
-				//鼠标监测	
-				POINT p;
 				input.getInput();
-				GetCursorPos(&p);
-				ScreenToClient(hwnd, &p);
-				int x = p.x;
-				int y = p.y;
-
-				//登陆
-				if (x > 200 && x < 400 && y>150 && y < 450)
-					SetCursor(arrow);
-				if (x < 600 && x>425 && y >150 && y < 175)
+				userlist.testKeys(input, []() {});
+				create.testKeys(input, [&]() {
+					scene = 2;
+				});
+				login.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 0;
-						scene = 1;
-						EnableWindow(hlist, false);
-					}
-				}
-
-				//创建一个新存档
-				if (x < 585 && x>425 && y > 250 && y < 275)
+					scene = 1;
+				});
+				choose.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 0;
-						scene = 2;
-						EnableWindow(hlist, false);
-					}
-				}
-
-				//选择这个存档
-				if (x <575 && x>440&& y > 350 && y < 375)
-				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON)) 
-					{
-						wchar_t	wselected[20] = { 0 };
-						HRESULT hr;
-						hr = SendMessage(hlist, LB_GETCURSEL, 0, 0);
-						SendMessage(hlist, LB_GETTEXT, hr, (LPARAM)wselected);
-						char selected[20] = { 0 };
-						WideCharToMultiByte(CP_ACP, 0, wselected, 20, selected, 20, NULL, NULL);
-						u.read(selected);
-						u.login();
-
-						scenepre = 0;
-						scene = 3;
-						EnableWindow(hlist, false);
-					}
-				}
-				Sleep(10);
-
+					HRESULT hr;
+					std::string s;
+					userlist.getselect(s);
+					u.read(s);
+					u.login();
+					scene = 3;
+				});
+			
 				break;
 			}
 
 			//*/注册界面
 			case 2:
 			{
-				if (scenepre != 2)
-				{
-					my2ddraw.draw(fun2);
-					EnableWindow(hedit, true);
-					EnableWindow(hpasswd, true);
-					scenepre = 2;
-
-				}
-				//鼠标监测	
-				POINT p;
 				input.getInput();
-				GetCursorPos(&p);
-				ScreenToClient(hwnd, &p);
-				int x = p.x;
-				int y = p.y;
-
-				//提交
-				if (x < 350 && x>300 && y > 400 && y < 425)
+				my2ddraw.draw(fun2);
+				submit.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 2;
-						char buf[1024];
-						char username[20];
-						char passwd[30];
-						wchar_t wusername[20];
-						wchar_t wpasswd[30];
-						buf[0] = 'r';
-						GetWindowText(hedit, wusername, 20);
-						GetWindowText(hpasswd, wpasswd, 30);
-						WideCharToMultiByte(CP_ACP, 0, wusername, 20, username, 20, 0, 0);
-						WideCharToMultiByte(CP_ACP, 0, wpasswd, 29, passwd, 29, 0, 0);
-						strcpy_s(buf + 1, 20, username);
-						strcpy_s(buf + 21, 29, passwd);
-						if (!strcmp(passwd, "")) {
-							MessageBox(hwnd, L"密码不能为空！", L"注册失败！", MB_OK);
-							break;
-						}
-						//注册
-						client.clientSend( buf, 1024);
-						memset(buf, 0, 1024);
-						client.clientRecv( buf, 1024);
-						if (buf[0] == 0)
-						{
-							MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
-							break;
-						}
-						if (buf[1] == 't')
-						{
-
-							u.username = username;
-							u.passwd = passwd;
-							u.current = -1;
-							u.lurd = "";
-							u.save();
-							//注册成功
-							MessageBox(hwnd, L"注册成功！", L"注册成功！", MB_OK);
-							EnableWindow(hedit, false);
-							EnableWindow(hpasswd, false);
-							scene = 3;
-						}
-						else
-						{
-							//注册失败
-							MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
-							break;
-						}
-
-
+					char buf[1024];
+					char lusername[20];
+					char lpasswd[30];
+					buf[0] = 'r';
+					WideCharToMultiByte(CP_ACP, 0, username.controlText, 20, lusername, 20, 0, 0);
+					WideCharToMultiByte(CP_ACP, 0, passwd.controlText, 29, lpasswd, 29, 0, 0);
+					strcpy_s(buf + 1, 20,lusername);
+					strcpy_s(buf + 21, 29, lpasswd);
+				if (!strcmp(lpasswd, "")) {
+						MessageBox(hwnd, L"密码不能为空！", L"注册失败！", MB_OK);
+						return;
 					}
-				}
-				//返回400, 400, 450, 425
-				if (x < 450 && x>400 && y > 400 && y < 425)
+					//注册
+					client.clientSend(buf, 1024);
+					memset(buf, 0, 1024);
+					client.clientRecv(buf, 1024);
+					if (buf[0] == 0)
+					{
+						MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
+						return;
+					}
+					if (buf[1] == 't')
+					{
+
+						u.username = lusername;
+						u.passwd = lpasswd;
+						u.current = -1;
+						u.lurd = "";
+						u.save();
+						//注册成功
+						MessageBox(hwnd, L"注册成功！", L"注册成功！", MB_OK);
+					}
+					else
+					{
+						//注册失败
+						MessageBox(hwnd, L"注册失败！", L"注册失败！", MB_OK);
+						return;
+					}
+				});
+				back.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 2;
-						scene = 0;
-						EnableWindow(hedit, false);
-						EnableWindow(hpasswd, false);
-					}
-				}
-				Sleep(10);
+					scene = 0;
+				});
+
+				username.testKeys(input);
+				passwd.testKeys(input);
 				break;
 			}
 			//*/注册界面
@@ -614,38 +550,17 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					scene = 0;
 					scenepre = 3;
 				}
-
-				my2ddraw.draw(fun3);
-
-				//鼠标监测	
-				POINT p;
 				input.getInput();
-				GetCursorPos(&p);
-				ScreenToClient(hwnd, &p);
-				int x = p.x;
-				int y = p.y;
-
-
-				//开始游戏(275, 200, 375, 225),
-				if (x < 375 && x>200 && y > 200 && y < 225)
+				my2ddraw.draw(fun3);
+				start.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 3;
-						scene = 4;
-					}
-				}
-				//重选存档 0, 0, 400, 25
-				if (x < 12.5*u.username.length() && x>0 && y > 0 && y < 25)
+					
+					scene = 4;
+				});
+				usertitle.testKeys(input, [&]() 
 				{
-					SetCursor(hand);
-					if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
-					{
-						scenepre = 3;
-						scene = 0;
-					}
-				}
+					scene = 0;
+				});
 				break;
 
 			}
@@ -702,16 +617,14 @@ LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		PostQuitMessage(0);
 		return 0;
-	case WM_CREATE:
-		hedit = CreateWindow(L"edit", 0, WS_CHILD | WS_VISIBLE | WS_BORDER, 300, 200, 200, 25, hwnd, 0, 0, 0);
-		EnableWindow(hedit, false);
-		hpasswd = CreateWindow(L"edit", 0, WS_CHILD| WS_VISIBLE | WS_BORDER|ES_PASSWORD,300, 300, 200, 25, hwnd, 0, 0, 0);
-		EnableWindow(hpasswd, false);
-		hlist = CreateWindow(L"listbox", NULL, LBS_NOTIFY | WS_CHILD | WS_VISIBLE | LBS_STANDARD,200, 150, 200, 300, hwnd, 0, ((LPCREATESTRUCT)lParam)->hInstance, 0);
-		EnableWindow(hlist, false);
-		
 
-		
+	case WM_CHAR:
+		if (cris::EditControl::focus == passwd.id)
+			passwd.onInput(wParam);
+		if (cris::EditControl::focus == username.id)
+			username.onInput(wParam);
+
+		break;
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -760,14 +673,6 @@ void init(HWND hwnd, HINSTANCE hinst)
 	//dinput
 	input.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 
-	std::vector<std::string> saves;
-	wchar_t savepath[] = L".\\save";
-	cris::findSaves(savepath, saves);
-	for (auto it = saves.begin(); it != saves.end(); it++)
-	{
-		wchar_t c[20] = { 0 };
-		MultiByteToWideChar(CP_ACP, 0, it->c_str(), it->length() - 5, c, 260);
-		SendMessage(hlist, LB_ADDSTRING, 0, (LPARAM)c);
-	}
+	
 }
 #endif // !__WINMAIN

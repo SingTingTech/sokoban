@@ -54,8 +54,11 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		}
 		else
 		{
+			
+
 			my2ddraw.draw([]()
 			{
+				dinput.getInput();
 				edit.draw(my2ddraw);
 				text.draw(my2ddraw);
 				text.testKeys(dinput,[]() {
@@ -63,12 +66,15 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				});
 				
 				list.draw(my2ddraw);
-				list.testKeys(dinput, []() {});
-
-
+				list.testKeys(dinput, []() {
+					int i=0;
+				});
+				char s[1024];
+				memset(s, 0, 1024);
+				sprintf_s(s, "%f%d", list.moveBar,list.cursor);
+				text << s;
 			});
-			Sleep(100);
-
+		
 		}
 
 	}
@@ -116,7 +122,7 @@ void init(HWND hwnd, HINSTANCE hinst)
 {
 
 	my2ddraw.init(hwnd);
-	dinput.inputIni(hinst, hwnd);
+	dinput.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 }
 #endif // __WINMAIN
 

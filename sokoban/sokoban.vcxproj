@@ -181,6 +181,7 @@
   <ItemGroup>
     <None Include="..\cursors\Arrow.cur" />
     <None Include="..\cursors\Hand.cur" />
+    <None Include="..\cursors\IBeam.cur" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="PNG\character\d11.png" />

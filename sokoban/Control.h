@@ -5,7 +5,7 @@
 #pragma comment(lib,"imm32.lib")
 namespace cris
 {
-	class Control 
+	class Control
 	{
 
 	protected:
@@ -13,13 +13,13 @@ namespace cris
 		HCURSOR hcursor;
 		D2D1_RECT_F size;//窗口大小
 	public:
-		Control(float x,float y,float width,float height) {
+		Control(float x, float y, float width, float height) {
 			size.left = x;
 			size.right = x + width;
 			size.top = y;
 			size.bottom = y + height;
 		}
-		bool mouseOn() 
+		bool mouseOn()
 		{
 			POINT p;
 			GetCursorPos(&p);
@@ -30,7 +30,7 @@ namespace cris
 		virtual void draw(my2d &my2ddraw) //绘制
 		{
 
-			if (mouseOn()) 
+			if (mouseOn())
 			{
 				SetCursor(hcursor);
 			}
@@ -38,11 +38,11 @@ namespace cris
 
 		}
 		template<class T>
-		void testKeys(DXInput &d, T t) 
+		void testKeys(DXInput &d, T t)
 		{
 
 		};//获取按键信息
-		virtual void setCursor(HCURSOR hcursor) 
+		virtual void setCursor(HCURSOR hcursor)
 		{
 			this->hcursor = hcursor;
 		}
@@ -51,12 +51,22 @@ namespace cris
 			this->hwnd = hwnd;
 		}
 	};
-	class TextControl :public Control 
+	class TextControl :public Control
 	{
 	public:
-		TextControl(float x, float y, float width, float height,const wchar_t*text) :Control(x, y, width, height)
+		TextControl(float x, float y, float width, float height, const wchar_t*text) :Control(x, y, width, height)
 		{
 			wcscpy_s(controlText, text);
+		}
+		void operator<<(std::string s)
+		{
+			memset(controlText, 0, 1024);
+			MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length() + 1, controlText, 1024);
+		}
+		void operator<<(int i)
+		{
+			memset(controlText, 0, 1024);
+			wsprintf(controlText, L"%d", i);
 		}
 		virtual void draw(my2d &my2ddraw)
 		{
@@ -68,40 +78,48 @@ namespace cris
 				my2ddraw.pGrayBrush);
 		};
 		template<class T>
-		void testKeys(DXInput &d,T t) {
+		void testKeys(DXInput &d, T t) {
 			static bool click = false;
-			d.getInput();
-			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON)) 
+			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
-				if(click)
+				if (click)
 				{
 					t();
 				}
-				
+
 			}
-			else 
+			else
 			{
 				click = true;
 			}
 		}
 
-	
-	};
-	class EditControl:public Control
+
+	};	
+
+	class EditControl :public Control
 	{
 	public:
-		
-		int cur = 0;//光标位置
-		EditControl(float x, float y, float width, float height) :Control(x, y, width, height)
+		enum EditType
 		{
-			
+			NORMAL,
+			PASSWD
+		};
+		static unsigned int focus;
+		unsigned int id;
+		EditType type;
+		int cur = 0;//光标位置
+		EditControl(float x, float y, float width, float height,unsigned int id,EditType type) :Control(x, y, width, height)
+		{
+			this->id = id;
+			this->type = type;
 		}
 		//获取输入
-		virtual void onInput(wchar_t ch) 
+		virtual void onInput(wchar_t ch)
 		{
 
-			if (ch == 8&&cur>0)controlText[--cur] = 0;
-			if ((ch > 6 && ch < 14) || ch == 27||ch == 32)
+			if (ch == 8 && cur > 0)controlText[--cur] = 0;
+			if ((ch > 6 && ch < 14) || ch == 27 || ch == 32)
 				return;
 			controlText[cur++] = ch;
 		}
@@ -109,16 +127,45 @@ namespace cris
 		{
 
 			Control::draw(my2ddraw);
-			my2ddraw.pRT->DrawText(controlText, wcslen(controlText),
+			
+			wchar_t outtext[1024];
+			memset(outtext, 0, 1024);
+			if (type == PASSWD) 
+			{
+				for (int i = 0; i < wcslen(controlText); ++i) 
+				{
+					outtext[i] = L'*';
+				}
+			}
+			else 
+			{
+				wcscpy_s(outtext, controlText);
+			}
+			my2ddraw.pRT->DrawText(outtext, wcslen(outtext),
 				my2ddraw.textNormal,
 				size,
 				my2ddraw.pGrayBrush);
 			my2ddraw.pRT->DrawLine(D2D1::Point2F(size.left, size.bottom), D2D1::Point2F(size.right, size.bottom), my2ddraw.pGrayBrush);
 			my2ddraw.pRT->DrawLine(D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.top), D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.bottom), my2ddraw.pGrayBrush);
 		};
+		void testKeys(DXInput &d) {
+			static bool click = false;
+			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			{
+				if (click)
+				{
+					focus = this->id;
+				}
 
-
+			}
+			else
+			{
+				click = true;
+			}
+		}
+	
 	};
+	
 	class ListControl :public Control
 	{
 	public:
@@ -133,9 +180,9 @@ namespace cris
 		void addstring(std::string str) {
 			list.push_back(str);
 		}
-		void getselect(std::string &s) 
+		void getselect(std::string &s)
 		{
-			if (cursor != -1) 
+			if (cursor != -1)
 			{
 				s = list[cursor];
 			}
@@ -144,16 +191,16 @@ namespace cris
 				s = "";
 			}
 		}
-		void setselect(int i) 
+		void setselect(int i)
 		{
 			cursor = i;
 		}
-		void setMove(float i) 
+		void setMove(float i)
 		{
-			if(i>=0&&i<=1)
-			moveBar = i;
+			if (i >= 0 && i <= 1)
+				moveBar = i;
 		}
-		void draw(my2d &my2ddraw) 
+		void draw(my2d &my2ddraw)
 		{
 			Control::draw(my2ddraw);
 			my2ddraw.pRT->FillRectangle(size, my2ddraw.pListBrush);
@@ -162,10 +209,10 @@ namespace cris
 			if (fullSize < controlHeight)
 			{
 				//无滚动条
-				if (cursor > 0)
+				if (cursor >= 0)
 					my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, size.top + 20.0f*cursor, size.right, size.top + 20.0f * cursor + 20.f), my2ddraw.pDarkBrush);
 				float fullSize = list.size() * 20;
-			
+
 				wchar_t buffer[30] = { 0 };
 				int i = 0;
 				for (auto it = list.begin(); it != list.end(); it++, i++)
@@ -174,8 +221,8 @@ namespace cris
 					MultiByteToWideChar(CP_ACP, 0, list[i].c_str(), list[i].length(), buffer, 30);
 					my2ddraw.pRT->DrawText(buffer, 30,
 						my2ddraw.textSmall,
-						D2D1::Rect(size.left, size.top + 20.0f*i,  size.right , size.top + 20.0f * (i + 1)),
-						my2ddraw.pLightBrush);
+						D2D1::Rect(size.left, size.top + 20.0f*i, size.right, size.top + 20.0f * (i + 1)),
+						my2ddraw.pGrayBrush);
 				}
 			}
 			else
@@ -183,7 +230,7 @@ namespace cris
 				//有滚动条
 				//虚拟顶端
 				float a = size.top - (fullSize - controlHeight)*moveBar;
-				if (cursor>0)
+				if (cursor >= 0)
 					my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, a + 20.0f*cursor<size.top ? size.top : a + 20.0f*cursor, size.right - 25, a + 20.0f * (cursor + 1)>size.bottom ? size.bottom : a + 20.0f * (cursor + 1)), my2ddraw.pDarkBrush);
 				float moveBarLength = controlHeight*(controlHeight / fullSize);
 
@@ -194,19 +241,20 @@ namespace cris
 				for (auto it = list.begin(); it != list.end(); it++, i++)
 				{
 					//*/截面绘制
-					if (a + 20.0f*i < size.top) 
+					if (a + 20.0f*i +20.f < size.top)
 					{
 						continue;
 					}
 					if (a + 20.0f*i > size.bottom)//向下截断
 						break;
-					
+
 					memset(buffer, 0, 30);
 					MultiByteToWideChar(CP_ACP, 0, list[i].c_str(), list[i].length(), buffer, 30);
-					my2ddraw.pRT->DrawText(buffer, 30,my2ddraw.textSmall,D2D1::Rect(size.left, a + 20.0f*i, size.right - 25,a + 20.0f * (i + 1)>size.bottom?size.bottom: a + 20.0f * (i + 1)),my2ddraw.pGrayBrush,D2D1_DRAW_TEXT_OPTIONS_CLIP);
+					my2ddraw.pRT->DrawText(buffer, 30, my2ddraw.textSmall, D2D1::Rect(size.left, a + 20.0f*i, size.right - 25, a + 20.0f * (i + 1) > size.bottom ? size.bottom : a + 20.0f * (i + 1)), my2ddraw.pGrayBrush, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 				}
 				//绘制滑块
-				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.right - 25, size.top+startPoint,size.right , size.top + startPoint+moveBarLength), my2ddraw.pLightBrush);
+				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.right - 25, size.top + startPoint, size.right, size.top + startPoint + moveBarLength), my2ddraw.pLightBrush);
+				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, size.top -20, size.right, size.top), my2ddraw.pBgBrush);
 
 
 			}
@@ -214,13 +262,13 @@ namespace cris
 		}
 
 		template<class T>
-		void testKeys(DXInput &d, T t) {
-			
+		void testKeys(DXInput &d, T t)
+		{
+
 			//*/鼠标监测
 			static bool canClick = false;
 			static bool drag = false;
-			d.getInput();
-			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
 				if (canClick)
 				{
@@ -232,19 +280,28 @@ namespace cris
 					float controlHeight = size.bottom - size.top;
 					float moveBarLength = controlHeight*(controlHeight / fullSize);
 					float startPoint = (controlHeight - moveBarLength)*moveBar;
+					float a = size.top - (fullSize - controlHeight)*moveBar;
+
 					//滚动条上
-					if (p.x<size.right&&p.y>size.right-25&& p.y>size.top + startPoint&&size.top + startPoint + moveBarLength>p.y) 
+					if (fullSize > controlHeight &&p.x<size.right&&p.x>size.right - 25 && p.y > size.top + startPoint&&size.top + startPoint + moveBarLength > p.y)
 					{
 						drag = true;
+						canClick = false;
 					}
-					//列表区域
-				//	if () {}
 
+					//列表区域
+					if (p.x<size.right - ((fullSize > controlHeight) ? 25 : 0) && p.x>size.left&&p.y > size.top&&p.y < size.bottom)
+					{
+						cursor = (p.y - ((fullSize > controlHeight) ? a : size.top))/ 20;
+						canClick = false;
+					}
 				}
-				if (drag) 
+				if (drag)
 				{
-					int i = d.getMouseXCoordinate();
-					moveBar += i / 100.0f;
+					int i = d.getMouseYCoordinate();
+					moveBar += i / 50.0f;
+					moveBar = moveBar > 1 ? 1 : moveBar < 0 ? 0 : moveBar;
+
 				}
 
 			}
@@ -256,4 +313,6 @@ namespace cris
 			//*/鼠标监测
 		}
 	};
+
+
 }

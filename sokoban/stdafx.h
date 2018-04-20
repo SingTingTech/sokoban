@@ -17,7 +17,7 @@
 #include <wincodec.h>
 #include "resource.h"
 
-#define __WINMAIN
+//#define __WINMAIN
 
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dinput8.lib")
@@ -40,5 +40,5 @@
 #define IDB_HUMAN_L2 IDB_PNG13
 #define IDB_HUMAN_R1 IDB_PNG14
 #define IDB_HUMAN_R2 IDB_PNG15
-
+#define IDC_MYIBEAM IDC_CURSOR1
 #endif

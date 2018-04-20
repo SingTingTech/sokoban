@@ -108,6 +108,9 @@
     <None Include="..\cursors\Hand.cur">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\cursors\IBeam.cur">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="PNG\Crate_Black.png">
