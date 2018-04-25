@@ -198,6 +198,7 @@
     <Image Include="PNG\CrateDark_Gray.png" />
     <Image Include="PNG\Crate_Black.png" />
     <Image Include="PNG\EndPoint_Black.png" />
+    <Image Include="PNG\EndPoint_Blue.png" />
     <Image Include="PNG\Ground_Dirt.png" />
     <Image Include="PNG\Wall_Black.png" />
   </ItemGroup>

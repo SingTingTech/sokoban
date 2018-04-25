@@ -146,8 +146,8 @@ namespace cris
 				size,
 				my2ddraw.pGrayBrush);
 			my2ddraw.pRT->DrawLine(D2D1::Point2F(size.left, size.bottom), D2D1::Point2F(size.right, size.bottom), my2ddraw.pGrayBrush);
-			my2ddraw.pRT->DrawLine(D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.top), D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.bottom), my2ddraw.pGrayBrush);
-		};
+		/*	my2ddraw.pRT->DrawLine(D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.top), D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.bottom), my2ddraw.pGrayBrush);
+		*/};
 		void testKeys(DXInput &d) {
 			static bool click = false;
 			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
@@ -231,7 +231,14 @@ namespace cris
 				//–Èƒ‚∂•∂À
 				float a = size.top - (fullSize - controlHeight)*moveBar;
 				if (cursor >= 0)
-					my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, a + 20.0f*cursor<size.top ? size.top : a + 20.0f*cursor, size.right - 25, a + 20.0f * (cursor + 1)>size.bottom ? size.bottom : a + 20.0f * (cursor + 1)), my2ddraw.pDarkBrush);
+				{
+					float top,bottom;
+					top = a + 20.0f*cursor < size.top ? size.top : a + 20.0f*cursor;
+					bottom = a + 20.0f * (cursor + 1) > size.bottom ? size.bottom : a + 20.0f * (cursor + 1);
+					if(top<bottom)
+						my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, top, size.right - 25, bottom), my2ddraw.pDarkBrush);
+				}
+					
 				float moveBarLength = controlHeight*(controlHeight / fullSize);
 
 				float startPoint = (controlHeight - moveBarLength)*moveBar;
@@ -254,6 +261,7 @@ namespace cris
 				}
 				//ªÊ÷∆ª¨øÈ
 				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.right - 25, size.top + startPoint, size.right, size.top + startPoint + moveBarLength), my2ddraw.pLightBrush);
+				//ƒ®≥˝∂•≤ø
 				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, size.top -20, size.right, size.top), my2ddraw.pBgBrush);
 
 
@@ -292,7 +300,9 @@ namespace cris
 					//¡–±Ì«¯”Ú
 					if (p.x<size.right - ((fullSize > controlHeight) ? 25 : 0) && p.x>size.left&&p.y > size.top&&p.y < size.bottom)
 					{
-						cursor = (p.y - ((fullSize > controlHeight) ? a : size.top))/ 20;
+						int i = (p.y - ((fullSize > controlHeight) ? a : size.top)) / 20;
+						cursor = i > list.size()?cursor:i;
+
 						canClick = false;
 					}
 				}
@@ -313,6 +323,45 @@ namespace cris
 			//*/ Û±Íº‡≤‚
 		}
 	};
+	class CheckBox:public Control
+	{
+	public:
+		bool isSelected;
+		CheckBox(float x,float y) :Control(x, y, 15, 15), isSelected(false)
+		{
+			
+		}
+		void draw(my2d my2ddraw) 
+		{
+			Control::draw(my2ddraw);
+			//bg
+			my2ddraw.pRT->FillRectangle(size, my2ddraw.pGrayBrush);
+			
+		
+			if(isSelected)//checked
+				my2ddraw.pRT->FillRectangle(D2D1::RectF(size.left+2.5,size.top+2.5,size.right-2.5,size.bottom-2.5), my2ddraw.pDarkBrush);
+			else//unchecked			
+				my2ddraw.pRT->FillRectangle(D2D1::RectF(size.left + 2.5, size.top + 2.5, size.right - 2.5, size.bottom - 2.5), my2ddraw.pBgBrush);
 
+
+		}
+		void testKeys(DXInput &d)
+		{
+			static bool click = false;
+			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			{
+				if (click)
+				{
+					isSelected = !isSelected;
+					click = false;
+				}
+
+			}
+			else
+			{
+				click = true;
+			}
+		}
+	};
 
 }

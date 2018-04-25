@@ -118,6 +118,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	passwd.setWnd(hwnd);
 	passwd.setCursor(ibeam);
 
+	usertitle.setWnd(hwnd);
+	usertitle.setCursor(hand);
 
 	init(hwnd,hinst);
 
@@ -156,7 +158,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	{
 		static cris::Timer timer;
 		static int freq = 0;
-		static wchar_t buf[20] = { 0 };
 		static cris::TextControl freqx = { 765, 0,35,25,L"" };
 
 		usertitle << u.username;
@@ -179,6 +180,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	
 
 	};
+
+	//地图选择界面
+
+
 	//地图缓存
 
 	//游戏界面渲染
@@ -201,7 +206,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		scaler = 600 / scaler;
 		
 		cris::BitmapLoader *b = &d2;
-
+		//startpoint
+		POINT sp;
+		sp.x = 100 + (m.getHeight() < m.getWidth() ? 0 : (600.f - m.getWidth()*(600.f/m.getHeight())) / 2);
+		sp.y = (m.getHeight() < m.getWidth() ? (600.f-m.getHeight()*(600.f/m.getWidth()))/2: 0 )- 31;
 		//*/画游戏区域
 		for (int i = 0; i < m.getHeight(); i++) 
 		{
@@ -209,15 +217,19 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			{
 				switch (m[i][j])
 				{
+#define RECTIJ(i,j) D2D1::RectF(j * scaler+sp.x, i * scaler+sp.y, (j + 1) * scaler+sp.x, (i + 1) * scaler+sp.y)
+#define HUMANRECT(i,j)  D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler +sp.x, i*scaler+sp.y, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler+sp.x, (i + 1) * scaler+sp.y)
+//#define RECTIJ(i,j)	D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler)
+//#define HUMANRECT(i,j) D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler)
 					//箱子
 				case 1:
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					my2ddraw.pRT->DrawBitmap(box.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i,j));
+					my2ddraw.pRT->DrawBitmap(box.pBitmap,RECTIJ(i,j));
 					break;
 					//人
 				case 2:
 					
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
 					if (!phase1) {
 						switch (lastDirection)
 						{
@@ -234,7 +246,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							b = &l2;
 							break;
 						}
-						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+						my2ddraw.pRT->DrawBitmap(b->pBitmap,HUMANRECT(i,j));
 					}
 					else 
 					{
@@ -265,7 +277,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							b = &l1;
 							break;
 						}
-						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+						my2ddraw.pRT->DrawBitmap(b->pBitmap,HUMANRECT(i,j));
 
 						t.stop();
 						if (t.timepassed * 1000 > 500)
@@ -278,28 +290,28 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					break;
 					//箱子在目标点
 				case 3:
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					my2ddraw.pRT->DrawBitmap(bot.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+					my2ddraw.pRT->DrawBitmap(bot.pBitmap, RECTIJ(i, j));
 					
 					break;
 					//墙
 				case 4:
-					my2ddraw.pRT->DrawBitmap(wall.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100+ ( j+1) * scaler, (i+1) * scaler));
+					my2ddraw.pRT->DrawBitmap(wall.pBitmap, RECTIJ(i, j));
 				
 					break;
 					//目标点
 				case 5:
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					my2ddraw.pRT->DrawBitmap(target.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+					my2ddraw.pRT->DrawBitmap(target.pBitmap, RECTIJ(i, j));
 					break;
 					//地板
 				case 6:
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
 					break;
 					//human on target
 				case 7:
-					my2ddraw.pRT->DrawBitmap(ground.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
-					my2ddraw.pRT->DrawBitmap(target.pBitmap, D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler));
+					my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+					my2ddraw.pRT->DrawBitmap(target.pBitmap, RECTIJ(i, j));
 					if (!phase1) {
 						switch (lastDirection)
 						{
@@ -316,7 +328,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							b = &l2;
 							break;
 						}
-						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
 					}
 					else
 					{
@@ -344,7 +356,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 							b = &l1;
 							break;
 						}
-						my2ddraw.pRT->DrawBitmap(b->pBitmap, D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler));
+						my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
 						t.stop();
 						if (t.timepassed * 1000 > 500)
 						{

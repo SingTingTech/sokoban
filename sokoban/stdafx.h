@@ -17,7 +17,7 @@
 #include <wincodec.h>
 #include "resource.h"
 
-//#define __WINMAIN
+#define __WINMAIN
 
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dinput8.lib")
@@ -28,7 +28,7 @@
 #define IDB_HUMAN_D2 IDB_PNG1
 #define IDB_GRUOND IDB_PNG4
 #define IDB_BOX IDB_PNG2
-#define IDB_TARGET IDB_PNG3
+#define IDB_TARGET IDB_PNG16
 #define IDB_WALL IDB_PNG5
 #define IDB_BOX_ON_TAR IDB_PNG6
 #define IDB_HUMAN_D11 IDB_PNG7

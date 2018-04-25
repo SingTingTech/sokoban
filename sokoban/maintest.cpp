@@ -10,16 +10,18 @@
 //globle vars
 cris::DXInput dinput;
 cris::my2d my2ddraw = { 0 };
-cris::EditControl edit = { 300,200,200,25 };
+cris::EditControl edit = { 300,200,200,25 ,1,cris::EditControl::NORMAL};
 cris::TextControl text = { 100,200,200,25,L"hello" };
 cris::ListControl list = { 300,300,200,50};
+cris::CheckBox check = { 100,400};
 //functions
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void init(HWND hwnd, HINSTANCE hinst);
 
 void createWndAndUpdate(HWND *hwnd, HINSTANCE hinst, HCURSOR hCursor, int nCmdShow);
-INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
+
+INT WINAPI WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	, LPSTR cmdLine, int nCmdShow) {
 	HCURSOR arrow = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYARROW));
 	HCURSOR hand = LoadCursor(hinst, MAKEINTRESOURCE(IDC_MYHAND));
@@ -44,6 +46,9 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	list.addstring("cirs");
 	list.setselect(2);
 	list.setMove(1);
+	check.setCursor(hand);
+	check.setWnd(hwnd);
+
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
 	{
@@ -73,6 +78,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				memset(s, 0, 1024);
 				sprintf_s(s, "%f%d", list.moveBar,list.cursor);
 				text << s;
+				check.draw(my2ddraw);
+				check.testKeys(dinput);
 			});
 		
 		}
