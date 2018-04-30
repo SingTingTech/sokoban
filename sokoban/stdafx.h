@@ -13,11 +13,12 @@
 #include <d2d1.h>
 #include <dwrite.h>
 #include <dinput.h>
+#include <stack>
 #include <queue>
 #include <wincodec.h>
 #include "resource.h"
 
-#define __WINMAIN
+//#define __TEST
 
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dinput8.lib")

@@ -8,6 +8,12 @@ cris::Point::Point(const Point & p)
 	this->x = p.x;
 	this->y = p.y;
 }
+bool cris::Point::operator==(const Point & p)
+{
+	if (this->x == p.x&&this->y == p.y)
+		return true;
+	return false;
+}
 void cris::Point::up(Point*p)
 {
 	p->x = x-1;
@@ -31,28 +37,62 @@ void cris::Point::right(Point*p)
 	p->x = x;
 	p->y = y + 1;
 }
-void cris::Point::up(Point&p)
+void cris::Point::up(Point&p)const
 {
 	p.x = x - 1;
 	p.y = y;
 }
 
-void cris::Point::left(Point&p)
+void cris::Point::left(Point&p)const
 {
 	p.x = x;
 	p.y = y - 1;
 }
 
-void cris::Point::down(Point&p)
+void cris::Point::down(Point&p)const
 {
 	p.x = x + 1;
 	p.y = y;
 }
 
-void cris::Point::right(Point&p)
+void cris::Point::right(Point&p)const
 {
 	p.x = x;
 	p.y = y + 1;
+}
+
+void cris::Point::move(direction d)
+{
+	switch (d) 
+	{
+	case cris::up:
+		up();
+	case cris::down:
+		down();
+	case cris::right:
+		right();
+	case cris::left:
+		left();
+	}
+}
+
+void cris::Point::move(Point & p, direction d) const
+{
+	switch (d)
+	{
+	case cris::up:
+		up(p);
+		break;
+	case cris::down:
+		down(p);
+		break;
+	case cris::right:
+		right(p);
+		break;
+	case cris::left:
+		left(p);
+		break;
+	}
 }
 
 void cris::Point::up()

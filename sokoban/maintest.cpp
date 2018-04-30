@@ -2,8 +2,11 @@
 #include"Control.h"
 #include"stdafx.h"
 
+#ifdef __TEST
 
-#ifdef __WINMAIN
+
+#ifndef __WINMAIN
+#define __WINMAIN
 //constants
 #define CLASSNAME _T("sokoban")
 
@@ -133,3 +136,4 @@ void init(HWND hwnd, HINSTANCE hinst)
 }
 #endif // __WINMAIN
 
+#endif // DEBUG

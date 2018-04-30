@@ -2,6 +2,7 @@
 
 HRESULT cris::DXInput::inputIni(HINSTANCE hinst,HWND hwnd,DWORD keyboardCoop,DWORD mouseCoop)
 {
+	inited = true;
 	HRESULT hr;
 	HR(DirectInput8Create(hinst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDirectInput, NULL));
 	
@@ -21,6 +22,7 @@ HRESULT cris::DXInput::inputIni(HINSTANCE hinst,HWND hwnd,DWORD keyboardCoop,DWO
 }
 HRESULT cris::DXInput::getInput() 
 {
+	if (!inited) return -1;
 	HRESULT hr;
 	hr = m_lpKeyboardDevice->GetDeviceState(sizeof m_keyBuffer, (LPVOID)&m_keyBuffer);
 

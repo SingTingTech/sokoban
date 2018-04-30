@@ -2,6 +2,9 @@
 #include"stdafx.h"
 #include"my2d.h"
 #include"DXInput.h"
+#include"BitmapLoader.h"
+#include"direction.h"
+#include"map.h"
 #pragma comment(lib,"imm32.lib")
 namespace cris
 {
@@ -13,6 +16,7 @@ namespace cris
 		HCURSOR hcursor;
 		D2D1_RECT_F size;//窗口大小
 	public:
+		static unsigned int focus;
 		Control(float x, float y, float width, float height) {
 			size.left = x;
 			size.right = x + width;
@@ -53,6 +57,7 @@ namespace cris
 	};
 	class TextControl :public Control
 	{
+		bool click = false;
 	public:
 		TextControl(float x, float y, float width, float height, const wchar_t*text) :Control(x, y, width, height)
 		{
@@ -79,12 +84,13 @@ namespace cris
 		};
 		template<class T>
 		void testKeys(DXInput &d, T t) {
-			static bool click = false;
-			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			
+			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
-				if (click)
+				if (mouseOn() && click)
 				{
 					t();
+					click = false;
 				}
 
 			}
@@ -96,16 +102,16 @@ namespace cris
 
 
 	};	
-
 	class EditControl :public Control
 	{
+		bool click = false;
 	public:
 		enum EditType
 		{
 			NORMAL,
 			PASSWD
 		};
-		static unsigned int focus;
+
 		unsigned int id;
 		EditType type;
 		int cur = 0;//光标位置
@@ -149,12 +155,12 @@ namespace cris
 		/*	my2ddraw.pRT->DrawLine(D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.top), D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.bottom), my2ddraw.pGrayBrush);
 		*/};
 		void testKeys(DXInput &d) {
-			static bool click = false;
-			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			if ( d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
-				if (click)
+				if (mouseOn() && click)
 				{
 					focus = this->id;
+					click = false;
 				}
 
 			}
@@ -268,17 +274,16 @@ namespace cris
 			}
 
 		}
-
+		bool click = false;
 		template<class T>
 		void testKeys(DXInput &d, T t)
 		{
-
+			
 			//*/鼠标监测
-			static bool canClick = false;
 			static bool drag = false;
 			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
-				if (canClick)
+				if (click)
 				{
 					//监测在哪个区域单击
 					POINT p;
@@ -294,7 +299,7 @@ namespace cris
 					if (fullSize > controlHeight &&p.x<size.right&&p.x>size.right - 25 && p.y > size.top + startPoint&&size.top + startPoint + moveBarLength > p.y)
 					{
 						drag = true;
-						canClick = false;
+						click= false;
 					}
 
 					//列表区域
@@ -303,7 +308,7 @@ namespace cris
 						int i = (p.y - ((fullSize > controlHeight) ? a : size.top)) / 20;
 						cursor = i > list.size()?cursor:i;
 
-						canClick = false;
+						click = false;
 					}
 				}
 				if (drag)
@@ -317,7 +322,7 @@ namespace cris
 			}
 			else
 			{
-				canClick = true;
+				click = true;
 				drag = false;
 			}
 			//*/鼠标监测
@@ -325,6 +330,7 @@ namespace cris
 	};
 	class CheckBox:public Control
 	{
+		bool click = false;
 	public:
 		bool isSelected;
 		CheckBox(float x,float y) :Control(x, y, 15, 15), isSelected(false)
@@ -347,10 +353,9 @@ namespace cris
 		}
 		void testKeys(DXInput &d)
 		{
-			static bool click = false;
-			if (mouseOn() && d.isMouseButtonDown(DXInput::LEFTBUTTON))
+		if ( d.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
-				if (click)
+				if (mouseOn() && click)
 				{
 					isSelected = !isSelected;
 					click = false;
@@ -363,5 +368,331 @@ namespace cris
 			}
 		}
 	};
+	class GameControl
+	{
+		cris::BitmapLoader d2;
+		cris::BitmapLoader d12;
+		cris::BitmapLoader d11;
+		cris::BitmapLoader u2;
+		cris::BitmapLoader u12;
+		cris::BitmapLoader u11;
+		cris::BitmapLoader l1;
+		cris::BitmapLoader l2;
+		cris::BitmapLoader r1;
+		cris::BitmapLoader r2;
 
+		cris::BitmapLoader target;
+		cris::BitmapLoader wall;
+		cris::BitmapLoader ground;
+		cris::BitmapLoader box;
+		cris::BitmapLoader bot;
+		HWND hwnd;
+		user &u;
+		map &m;
+		cris::Timer timer;
+		int freq = 0;
+		wchar_t buf[20] = { 0 };
+		cris::Timer t;
+		bool phase1 = false;
+		bool type1 = true;
+		POINT p;
+		int x = 0;
+		int y = 0;
+		int scaler;//startpoint
+		POINT sp;
+	public:
+		direction lastDirection = down;
+
+		void init(HWND hwnd,HINSTANCE hinst,my2d my2ddraw)
+		{
+			this->hwnd = hwnd;
+			d2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D2, 50, 0);
+			d12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D12, 50, 0);
+			d11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D11, 50, 0);
+			u2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U2, 50, 0);
+			u12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U12, 50, 0);
+			u11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_U11, 50, 0);
+			l2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L2, 50, 0);
+			l1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_L1, 50, 0);
+			r2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R2, 50, 0);
+			r1.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_R1, 50, 0);
+			box.loadPNG(hinst, my2ddraw.pRT, IDB_BOX, 50, 0);
+			target.loadPNG(hinst, my2ddraw.pRT, IDB_TARGET, 50, 0);
+			wall.loadPNG(hinst, my2ddraw.pRT, IDB_WALL, 50, 0);
+			ground.loadPNG(hinst, my2ddraw.pRT, IDB_GRUOND, 50, 0);
+			bot.loadPNG(hinst, my2ddraw.pRT, IDB_BOX_ON_TAR, 50, 0);
+		}
+		void cleanup() 
+		{
+			d2.cleanup();
+			d12.cleanup();
+			d11.cleanup();
+			u2.cleanup();
+			u12.cleanup();
+			u11.cleanup();
+			l1.cleanup();
+			l2.cleanup();
+			r1.cleanup();
+			r2.cleanup();
+			box.cleanup();
+			wall.cleanup();
+			target.cleanup();
+			ground.cleanup();
+			bot.cleanup();
+
+		}
+		void draw(my2d my2ddraw) 
+		{
+			scaler = m.getHeight() < m.getWidth() ? m.getWidth() : m.getHeight();
+			scaler = 600 / scaler;
+
+			cris::BitmapLoader *b = &d2;
+			
+			sp.x = 100 + (m.getHeight() < m.getWidth() ? 0 : (600.f - m.getWidth()*(600.f / m.getHeight())) / 2);
+			sp.y = (m.getHeight() < m.getWidth() ? (600.f - m.getHeight()*(600.f / m.getWidth())) / 2 : 0) - 31;
+			//*/画游戏区域 
+			for (int i = 0; i < m.getHeight(); i++)
+			{
+				for (int j = 0; j < m.getWidth(); j++)
+				{
+					switch (m[i][j])
+					{
+#define RECTIJ(i,j) D2D1::RectF(j * scaler+sp.x, i * scaler+sp.y, (j + 1) * scaler+sp.x, (i + 1) * scaler+sp.y)
+#define HUMANRECT(i,j)  D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler +sp.x, i*scaler+sp.y, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler+sp.x, (i + 1) * scaler+sp.y)
+						//#define RECTIJ(i,j)	D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler)
+						//#define HUMANRECT(i,j) D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler)
+						//箱子
+					case 1:
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						my2ddraw.pRT->DrawBitmap(box.pBitmap, RECTIJ(i, j));
+						break;
+						//人
+					case 2:
+
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						if (!phase1) {
+							switch (lastDirection)
+							{
+							case down:
+								b = &d2;
+								break;
+							case right:
+								b = &r2;
+								break;
+							case up:
+								b = &u2;
+								break;
+							case left:
+								b = &l2;
+								break;
+							}
+							my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
+						}
+						else
+						{
+							switch (lastDirection)
+							{
+							case down:
+
+								if (type1)
+									b = &d11;
+								else
+									b = &d12;
+								type1 = !type1;
+
+								break;
+							case right:
+								b = &r1;
+
+								break;
+							case up:
+								if (type1)
+									b = &u12;
+								else
+									b = &u11;
+								type1 = !type1;
+
+								break;
+							case left:
+								b = &l1;
+								break;
+							}
+							my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
+
+							t.stop();
+							if (t.timepassed * 1000 > 500)
+							{
+								//enter phase2
+								phase1 = false;
+								t.start();
+							}
+						}
+						break;
+						//箱子在目标点
+					case 3:
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						my2ddraw.pRT->DrawBitmap(bot.pBitmap, RECTIJ(i, j));
+
+						break;
+						//墙
+					case 4:
+						my2ddraw.pRT->DrawBitmap(wall.pBitmap, RECTIJ(i, j));
+
+						break;
+						//目标点
+					case 5:
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						my2ddraw.pRT->DrawBitmap(target.pBitmap, RECTIJ(i, j));
+						break;
+						//地板
+					case 6:
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						break;
+						//human on target
+					case 7:
+						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));
+						my2ddraw.pRT->DrawBitmap(target.pBitmap, RECTIJ(i, j));
+						if (!phase1) {
+							switch (lastDirection)
+							{
+							case down:
+								b = &d2;
+								break;
+							case right:
+								b = &r2;
+								break;
+							case up:
+								b = &u2;
+								break;
+							case left:
+								b = &l2;
+								break;
+							}
+							my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
+						}
+						else
+						{
+							switch (lastDirection)
+							{
+							case down:
+
+								if (type1)
+									b = &d11;
+								else
+									b = &d12;
+								type1 = !type1;
+								break;
+							case right:
+								b = &r1;
+								break;
+							case up:
+								if (type1)
+									b = &u12;
+								else
+									b = &u11;
+								type1 = !type1;
+								break;
+							case left:
+								b = &l1;
+								break;
+							}
+							my2ddraw.pRT->DrawBitmap(b->pBitmap, HUMANRECT(i, j));
+							t.stop();
+							if (t.timepassed * 1000 > 500)
+							{
+								//enter phase2
+								phase1 = false;
+								t.start();
+							}
+						}	break;
+
+					}
+				}
+			}
+			//监测是否已完成
+			if (m.isComplete())
+			{
+				const wchar_t * t2 = L"完成";
+				my2ddraw.pRT->DrawText(t2, wcslen(t2),
+					my2ddraw.textNormal,
+					D2D1::RectF(0, 100, 100, 125),
+					my2ddraw.pGrayBrush);
+			}
+
+			//*/帧数统计
+			freq++;
+			timer.stop();
+			if (timer.timepassed * 1000 >= 500)
+			{
+				//wsprintf(buf, L"freq:%d", freq * 2);
+				freq = 0;
+				timer.start();
+			}
+		}
+		void testkeys(DXInput input) 
+		{
+			static int lastkey = -2;//指示按键是否有效
+
+			if (lastkey == -2 && input.isKeyDown(DIK_UP))
+			{
+				m.step(cris::up);
+				lastkey = DIK_UP;//有键按下后任何按键无效
+				lastDirection = up;
+				u.lurd += 'u';
+				phase1 = true;
+			}
+			if (lastkey == -2 && input.isKeyDown(DIK_DOWN))
+			{
+				m.step(cris::down);
+				lastkey = DIK_DOWN;
+				lastDirection = down;
+				u.lurd += 'd';
+				phase1 = true;
+			}
+			if (lastkey == -2 && input.isKeyDown(DIK_LEFT))
+			{
+				m.step(cris::left);
+				lastkey = DIK_LEFT;
+				lastDirection = left;
+				u.lurd += 'l';
+				phase1 = true;
+			}
+			if (lastkey == -2 && input.isKeyDown(DIK_RIGHT))
+			{
+				m.step(cris::right);
+				lastkey = DIK_RIGHT;
+				lastDirection = right;
+				u.lurd += 'r';
+				phase1 = true;
+			}
+			if (!(input.isKeyDown(DIK_RIGHT) | input.isKeyDown(DIK_LEFT) | input.isKeyDown(DIK_DOWN) | input.isKeyDown(DIK_UP)))//若所有按键均松开则接下来的按键有效
+			{
+				lastkey = -2;
+			}
+			//鼠标点击
+			static bool click = false;//指示鼠标点击是否有效
+			if (input.isMouseButtonDown(cris::DXInput::LEFTBUTTON))
+			{
+				if (click) {
+
+					input.getInput();
+					GetCursorPos(&p);
+					ScreenToClient(hwnd, &p);
+					x = p.x;
+					y = p.y;
+					x = (x - sp.x) / scaler;
+					y = (y - sp.y) / scaler;
+					m.jump(y, x, u);
+					click = false;
+				}
+			}
+			else
+			{
+				click = true;
+			}
+		}
+		GameControl(user &user,map&map) :u(user),m(map)
+		{	
+		}
+	};
 }

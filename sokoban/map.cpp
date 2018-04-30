@@ -347,6 +347,7 @@ void cris::map::nextPos(direction d, Point p, Point *next) {
 
 
 }
+
 bool cris::map::step(direction d)
 {
 	Point men, n1, next2;
@@ -476,6 +477,152 @@ bool cris::map::step(direction d)
 	}
 	return false;
 }
+void cris::map::back(direction lastdirection)
+{
+	Point p;
+	Point man;
+	getMenPos(&man);
+	nextPos(lastdirection, man, &p);
+	Point lastpos;
+	switch (lastdirection) 
+	{
+	case up:
+		nextPos(down, man, &lastpos);
+		break;
+	case down:
+		nextPos(up, man, &lastpos);
+		break;
+	case right:
+		nextPos(left, man, &lastpos);
+		break;
+	case left:
+		nextPos(right, man, &lastpos);
+		break;
+	}
+	
+	/*
+		//box		
+		case '$' = 1;
+		//human	
+		case '@' = 2;
+		//box on target
+		case '*' = 3;
+		//wall
+		case '#' = 4;
+		//target
+		case '.' = 5;
+		//ground
+		case '-':
+		case '_':
+		case ' ' = 6;
+		//man on target	
+		case '+' = 7;;
+				break;
+				*/
+	switch (mapContent[man.x][man.y]) 
+	{
+		//man on target   +
+	case 7:
+		switch (mapContent[p.x][p.y]) 
+		{
+			//推过箱子    +$
+		case 1:
+			switch (mapContent[lastpos.x][lastpos.y])
+			{
+			case 6://	_+$ => @*_
+				mapContent[lastpos.x][lastpos.y] = 2;				
+				mapContent[man.x][man.y] = 3;
+				mapContent[p.x][p.y] = 6;
+				break;
+			case 5://	.+$ => +*_
+				mapContent[lastpos.x][lastpos.y] = 7;
+				mapContent[man.x][man.y] = 3;
+				mapContent[p.x][p.y] = 6;
+				break;
+			}
+		case 3://		+*
+			switch (mapContent[lastpos.x][lastpos.y])
+			{
+			case 6://	_+* => @*.
+				mapContent[lastpos.x][lastpos.y] = 2;
+				mapContent[man.x][man.y] = 3;
+				mapContent[p.x][p.y] = 5;
+				break;
+			case 5://	.+* => +*.
+				mapContent[lastpos.x][lastpos.y] = 7;
+				mapContent[man.x][man.y] = 3;
+				mapContent[p.x][p.y] = 5;
+				break;
+
+			}
+			//未推过箱子
+		case 4:
+		case 5:
+		case 6:
+			switch (mapContent[lastpos.x][lastpos.y]) 
+			{
+			case 6://	_+| => @.|
+				mapContent[lastpos.x][lastpos.y] = 2;
+				mapContent[man.x][man.y] = 5;
+				break;
+			case 5://	.+* => +.|
+				mapContent[lastpos.x][lastpos.y] = 7;
+				mapContent[man.x][man.y] = 5;
+				break;
+			}
+		
+		}
+	case 2:
+		switch (mapContent[p.x][p.y])
+		{
+				//推过箱子    @$
+			case 1:
+				switch (mapContent[lastpos.x][lastpos.y])
+				{
+				case 6://	_@$ => @$_
+					mapContent[lastpos.x][lastpos.y] = 2;
+					mapContent[man.x][man.y] = 1;
+					mapContent[p.x][p.y] = 6;
+					break;
+				case 5://	.@$ => +$_
+					mapContent[lastpos.x][lastpos.y] = 7;
+					mapContent[man.x][man.y] = 1;
+					mapContent[p.x][p.y] = 6;
+					break;
+				}
+			case 3://		@*
+				switch (mapContent[lastpos.x][lastpos.y])
+				{
+				case 6://	_@* => @$.
+					mapContent[lastpos.x][lastpos.y] = 2;
+					mapContent[man.x][man.y] = 1;
+					mapContent[p.x][p.y] = 5;
+					break;
+				case 5://	.@* => +$.
+					mapContent[lastpos.x][lastpos.y] = 7;
+					mapContent[man.x][man.y] = 1;
+					mapContent[p.x][p.y] = 5;
+					break;
+				}
+			//
+		case 4:
+		case 5:
+		case 6:
+			switch (mapContent[lastpos.x][lastpos.y])
+			{
+			case 6://	_+| => @_|
+				mapContent[lastpos.x][lastpos.y] = 2;
+				mapContent[man.x][man.y] = 6;
+				break;
+			case 5://	.+* => +_|
+				mapContent[lastpos.x][lastpos.y] = 7;
+				mapContent[man.x][man.y] = 6;
+				break;
+			}
+		}
+	}
+
+}
 cris::map::~map()
 {
 	for (int i = 0; i < mapHeight; i++)
@@ -484,91 +631,58 @@ cris::map::~map()
 	}
 	delete mapContent;
 }
-bool cris::map::jump(int i, int j) 
+bool cris::map::jump(int i, int j,cris::user &u) 
 {
 
 	Point start;
 	getMenPos(&start);
 	bool visited[50][50] = { false };
 	Point end = { i,j };
-	//bfs
 	Point cur = start;
-	std::queue<Point> queue;
-	while (!queue.empty()) 
+	std::string lurd;
+	bool rt = dfs(start, end,lurd);
+	u.lurd += lurd;
+
+	if (rt)
 	{
-		queue.pop();
-	}
-	queue.push(cur);
-	while (!queue.empty()) 
-	{
-		cur = queue.front();
-		queue.pop();
-		if (cur.x == end.x&&cur.y == end.y) 
+
+		switch (mapContent[start.x][start.y])
 		{
-			
-			switch (mapContent[start.x][start.y]) 
+			//人
+		case 2:
+			switch (mapContent[end.x][end.y])
 			{
-				//人
-			case 2:
-				switch (mapContent[end.x][end.y])
-				{
-					//地板
-				case 6:
-					mapContent[start.x][start.y] = 6;
-					mapContent[end.x][end.y] = 2;
-					break;
-					//目标点
-				case 5:
-					mapContent[start.x][start.y] = 6;
-					mapContent[end.x][end.y] = 7;
-					break;
-				}
+				//地板
+			case 6:
+				mapContent[start.x][start.y] = 6;
+				mapContent[end.x][end.y] = 2;
 				break;
-				//人在目标点
-			case 7:
-				switch (mapContent[end.x][end.y])
-				{
-					//地板
-				case 6:
-					mapContent[start.x][start.y] = 5;
-					mapContent[end.x][end.y] = 2;
-					break;
-					//目标点
-				case 5:
-					mapContent[start.x][start.y] = 5;
-					mapContent[end.x][end.y] = 7;
-					break;
-				}
+				//目标点
+			case 5:
+				mapContent[start.x][start.y] = 6;
+				mapContent[end.x][end.y] = 7;
 				break;
 			}
-				return true;
+			break;
+			//人在目标点
+		case 7:
+			switch (mapContent[end.x][end.y])
+			{
+				//地板
+			case 6:
+				mapContent[start.x][start.y] = 5;
+				mapContent[end.x][end.y] = 2;
+				break;
+				//目标点
+			case 5:
+				mapContent[start.x][start.y] = 5;
+				mapContent[end.x][end.y] = 7;
+				break;
+			}
+			break;
 		}
-		visited[cur.x][cur.y] = true;
-		Point p;
-		cur.up(p);
-		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y]&&mapContent[p.x][p.y]>4)
-		{
-			visited[p.x][p.y] = true;
-			queue.push(p);
-		}
-		cur.left(p);
-		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
-		{
-			visited[p.x][p.y] = true;
-			queue.push(p);
-		}
-		cur.down(p);
-		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
-		{
-			visited[p.x][p.y] = true;
-			queue.push(p);
-		}
-		cur.right(p);
-		if (p.x >= 0 && p.x < mapHeight&&p.y >= 0 && p.y < mapWidth && !visited[p.x][p.y] && mapContent[p.x][p.y]>4)
-		{
-			visited[p.x][p.y] = true;
-			queue.push(p);
-		}
+		return true;
 	}
 	return false;
+	
 }

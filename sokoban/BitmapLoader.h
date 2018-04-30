@@ -17,9 +17,9 @@ namespace cris {
 		void ini() 
 		{
 			// Initialize COM
-			CoInitialize(NULL);
+			HRESULT hr = CoInitialize(NULL);
 			// Create the COM imaging factory
-			HRESULT hr = CoCreateInstance(
+			hr = CoCreateInstance(
 				CLSID_WICImagingFactory,
 				NULL,
 				CLSCTX_INPROC_SERVER,
@@ -171,10 +171,11 @@ namespace cris {
 			
 
 			UINT originalWidth, originalHeight;
-			if (SUCCEEDED(hr))
+			if (FAILED(hr))
 			{
-				hr = pSource->GetSize(&originalWidth, &originalHeight);
-			}
+				return;
+			}	
+			hr = pSource->GetSize(&originalWidth, &originalHeight);
 			if (targetWidth == 0)
 			{
 				FLOAT scalar = static_cast<FLOAT>(targetHeight) / static_cast<FLOAT>(originalHeight);

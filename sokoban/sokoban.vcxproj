@@ -150,6 +150,7 @@
     <ClCompile Include="client.cpp" />
     <ClCompile Include="clientSokect.cpp" />
     <ClCompile Include="Control.cpp" />
+    <ClCompile Include="direction.cpp" />
     <ClCompile Include="DXInput.cpp" />
     <ClCompile Include="maintest.cpp" />
     <ClCompile Include="Save.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="BitmapLoader.h" />
     <ClInclude Include="clientSocket.h" />
     <ClInclude Include="Control.h" />
+    <ClInclude Include="direction.h" />
     <ClInclude Include="DXInput.h" />
     <ClInclude Include="Save.h" />
     <ClInclude Include="map.h" />

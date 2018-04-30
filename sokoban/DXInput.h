@@ -7,6 +7,7 @@
 
 namespace cris {
 	class DXInput {
+		bool inited = false;
 		LPDIRECTINPUT8 m_lpDirectInput;
 		LPDIRECTINPUTDEVICE8 m_lpMouseDevice;
 		LPDIRECTINPUTDEVICE8 m_lpKeyboardDevice;
