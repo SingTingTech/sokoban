@@ -152,7 +152,6 @@
     <ClCompile Include="Control.cpp" />
     <ClCompile Include="direction.cpp" />
     <ClCompile Include="DXInput.cpp" />
-    <ClCompile Include="maintest.cpp" />
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="my2d.cpp" />
@@ -167,6 +166,7 @@
     <ClInclude Include="Control.h" />
     <ClInclude Include="direction.h" />
     <ClInclude Include="DXInput.h" />
+    <ClInclude Include="MapStream.h" />
     <ClInclude Include="Save.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="my2d.h" />

@@ -4,10 +4,8 @@
 #include"DXInput.h"
 #include"user.h"
 #include"tools.h"
-
+#include"MapStream.h"
 #include"Control.h"
-#include"maintest.cpp"
-
 
 using cris::direction;
 using cris::down;
@@ -29,42 +27,21 @@ cris::MySocket client;
 cris::EditControl username = { 300, 200, 200, 25, 1 ,cris::EditControl::NORMAL };
 cris::EditControl passwd = { 300, 300, 200, 25, 2 ,cris::EditControl::PASSWD };
 //地图缓存
-cris::map m(".\\maps\\screen.1");
+cris::map m(".\\maps\\0.xsbs");
 //当前用户信息
 cris::user u;
 cris::GameControl game = { u,m };
 //初始化焦点
-unsigned int cris::EditControl::focus = -1;
-
+unsigned int cris::Control::focus = -1;
+bool cris::Control::click = false;
 
 //functions
 //消息处理函数
 LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //加载存档
-inline void loadsaves(cris::ListControl &userlist)
-{
-	std::vector<std::string> saves;
-	wchar_t savepath[] = L".\\save";
-	cris::findSaves(savepath, saves);
-	for (auto it = saves.begin(); it != saves.end(); it++)
-	{
-		it->erase(it->end() - 5, it->end());
-		userlist.addstring(*it);
-	}
+void loadsaves(cris::ListControl &userlist);
+void loadmaps(cris::ListControl &maplist);
 
-}
-inline void loadmaps(cris::ListControl &userlist)
-{
-	std::vector<std::string> maps;
-	wchar_t savepath[] = L".\\maps";
-	cris::findSaves(savepath, maps);
-	for (auto it = maps.begin(); it != maps.end(); it++)
-	{
-		it->erase(it->end() - 4, it->end());
-		userlist.addstring(*it);
-	}
-
-}
 //初始化
 void init(HWND hwnd, HINSTANCE hinst);
 
@@ -96,9 +73,9 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	cris::TextControl start = { 275, 200,100,25,L"关卡选择" };
 	cris::TextControl usertitle = { 0,0,400,25,L"" };
 	//地图选择界面
-	cris::TextControl levelstart = { 425, 150,200,25,L"使用一个账号登陆" };
+	cris::TextControl levelstart = { 425, 150,100,25,L"开始游戏" };
 	cris::ListControl maplist = { 200, 150, 200, 300 };
-
+	cris::TextControl upload = { 425, 200,100,25,L"上传地图" };
 	//test
 	cris::TextControl test = { 0,400,200,300,L"" };
 	int scene = 3;//默认主菜单
@@ -142,6 +119,16 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 
 		backward.setWnd(hwnd);
 		backward.setCursor(hand);
+
+		maplist.setWnd(hwnd);
+		maplist.setCursor(hand);
+		loadmaps(maplist);
+
+		levelstart.setWnd(hwnd);
+		levelstart.setCursor(hand);
+
+		upload.setWnd(hwnd);
+		upload.setCursor(hand);
 
 		init(hwnd, hinst);
 	}
@@ -227,8 +214,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	//地图选择界面
 	auto fun5 = [&]() 
 	{
+		maplist.draw(my2ddraw);
 		gameback.draw(my2ddraw);
-
+		levelstart.draw(my2ddraw);
+		upload.draw(my2ddraw);
 	};
 
 	MSG msg = { 0 };
@@ -248,15 +237,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				my2ddraw.draw(fun0);
 
 				input.getInput();
-				userlist.testKeys(input, []() {});
-				create.testKeys(input, [&]() {
-					scene = 2;
-				});
-				login.testKeys(input, [&]()
-				{
-					scene = 1;
-				});
-				choose.testKeys(input, [&]()
+				userlist.testKeys(input);
+				create.testKeys(input, [&scene]() {scene = 2;});
+				login.testKeys(input, [&scene](){scene = 1;});
+				choose.testKeys(input, [&scene,&userlist]()
 				{
 					HRESULT hr;
 					std::string s;
@@ -272,7 +256,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			{
 				input.getInput();
 				my2ddraw.draw(fun2);
-				submit.testKeys(input, [&]()
+				submit.testKeys(input, [&scene,hwnd]()
 				{
 					char buf[1024];
 					char lusername[20];
@@ -313,7 +297,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 						return;
 					}
 				});
-				back.testKeys(input, [&](){scene = 0;});
+				back.testKeys(input, [&scene](){scene = 0;});
 
 				username.testKeys(input);
 				passwd.testKeys(input);
@@ -324,7 +308,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			{
 				input.getInput();
 				my2ddraw.draw(fun2);
-				submit.testKeys(input, [&]()
+				submit.testKeys(input, [&scene,hwnd]()
 				{
 					char buf[1024];
 					char lusername[20];
@@ -365,7 +349,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 						return;
 					}
 				});
-				back.testKeys(input, [&]() {scene = 0; });
+				back.testKeys(input, [&scene]() {scene = 0; });
 
 				username.testKeys(input);
 				passwd.testKeys(input);
@@ -383,8 +367,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				}
 				input.getInput();
 				my2ddraw.draw(fun3);
-				start.testKeys(input, [&]() {scene = 5; });
-				usertitle.testKeys(input, [&]() {scene = 0; });
+				start.testKeys(input, [&scene]() {scene = 5; });
+				usertitle.testKeys(input, [&scene]() {scene = 0; });
 				break;
 
 			}
@@ -393,8 +377,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				input.getInput();
 				my2ddraw.draw(fun4);
 				game.testkeys(input);
-				gameback.testKeys(input, [&]() {scene = 5; });
-				backward.testKeys(input, [&]() 
+				gameback.testKeys(input, [&scene]() {scene = 5; });
+				backward.testKeys(input, [&scene]()
 				{
 					if (u.lurd.size() <= 0)
 						return;
@@ -423,9 +407,34 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					}
 				});
 					break;
+			//*/地图选择界面
 			case 5:
-				gameback.testKeys(input, [&]() {scene = 3; });
+				input.getInput();
+				my2ddraw.draw(fun5);
+				gameback.testKeys(input, [&scene]() {scene = 3; });
+				maplist.testKeys(input);
+				levelstart.testKeys(input, [&scene,&maplist]() 
+				{
+					scene = 4;
+					std::string file;
+					maplist.getselect(file);
+					m.readMapFromFile(".\\maps\\" + file + ".xsbs");
+				});
+				upload.testKeys(input, [&maplist]()
+				{
+					std::string file;
+					maplist.getselect(file);
+					MapStream map = { ".\\maps\\" + file + ".xsbs" ,true};
+					char buf[1024];
+					do {
+						
+						map >> buf;
+						client.clientSend(buf, 1024);
+						memset(buf, 0, 1024);
+						client.clientRecv(buf, 1024);
 
+					} while (buf[0]=='v');
+				});
 				break;
 
 				//test
@@ -503,6 +512,37 @@ void init(HWND hwnd, HINSTANCE hinst)
 	//dinput
 	input.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 
+
+}
+void loadmaps(cris::ListControl &maplist)
+{
+	std::vector<std::string> maps;
+	wchar_t savepath[] = L".\\maps";
+	cris::findXSBs(savepath, maps);
+	std::sort(maps.begin(), maps.end(), [](std::string a, std::string b)->bool
+	{
+		int x = std::stoi(a);
+		int y = std::stoi(b);
+		return x< y;
+
+	});
+	for (auto it = maps.begin(); it != maps.end(); it++)
+	{
+		it->erase(it->end() - 5, it->end());
+		maplist.addstring(*it);
+	}
+
+}
+void loadsaves(cris::ListControl &userlist)
+{
+	std::vector<std::string> saves;
+	wchar_t savepath[] = L".\\save";
+	cris::findSaves(savepath, saves);
+	for (auto it = saves.begin(); it != saves.end(); it++)
+	{
+		it->erase(it->end() - 5, it->end());
+		userlist.addstring(*it);
+	}
 
 }
 #endif // !__WINMAIN

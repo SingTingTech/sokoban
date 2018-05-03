@@ -10,8 +10,9 @@ namespace cris
 {
 	class Control
 	{
-
+		
 	protected:
+		static bool click;
 		HWND hwnd;	//父窗口句柄
 		HCURSOR hcursor;
 		D2D1_RECT_F size;//窗口大小
@@ -55,9 +56,9 @@ namespace cris
 			this->hwnd = hwnd;
 		}
 	};
+	
 	class TextControl :public Control
 	{
-		bool click = false;
 	public:
 		TextControl(float x, float y, float width, float height, const wchar_t*text) :Control(x, y, width, height)
 		{
@@ -104,8 +105,7 @@ namespace cris
 	};	
 	class EditControl :public Control
 	{
-		bool click = false;
-	public:
+		public:
 		enum EditType
 		{
 			NORMAL,
@@ -178,10 +178,10 @@ namespace cris
 		int cursor;
 		std::vector<std::string> list;
 		//0-1之间的小数 进度条
-		float moveBar = -1;
+		float moveBar = 0;
 		ListControl(float x, float y, float width, float height) :Control(x, y, width, height)
 		{
-			cursor = -1;
+			cursor = 0;
 		}
 		void addstring(std::string str) {
 			list.push_back(str);
@@ -274,11 +274,17 @@ namespace cris
 			}
 
 		}
-		bool click = false;
-		template<class T>
-		void testKeys(DXInput &d, T t)
+	
+		void testKeys(DXInput &d)
 		{
-			
+			POINT p;
+			GetCursorPos(&p);
+			ScreenToClient(hwnd, &p);
+			float fullSize = list.size() * 20;
+			float controlHeight = size.bottom - size.top;
+			float moveBarLength = controlHeight*(controlHeight / fullSize);
+			float startPoint = (controlHeight - moveBarLength)*moveBar;
+			float a = size.top - (fullSize - controlHeight)*moveBar;
 			//*/鼠标监测
 			static bool drag = false;
 			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
@@ -286,14 +292,7 @@ namespace cris
 				if (click)
 				{
 					//监测在哪个区域单击
-					POINT p;
-					GetCursorPos(&p);
-					ScreenToClient(hwnd, &p);
-					float fullSize = list.size() * 20;
-					float controlHeight = size.bottom - size.top;
-					float moveBarLength = controlHeight*(controlHeight / fullSize);
-					float startPoint = (controlHeight - moveBarLength)*moveBar;
-					float a = size.top - (fullSize - controlHeight)*moveBar;
+
 
 					//滚动条上
 					if (fullSize > controlHeight &&p.x<size.right&&p.x>size.right - 25 && p.y > size.top + startPoint&&size.top + startPoint + moveBarLength > p.y)
@@ -314,7 +313,7 @@ namespace cris
 				if (drag)
 				{
 					int i = d.getMouseYCoordinate();
-					moveBar += i / 50.0f;
+					moveBar += i / (50.0f*(fullSize/controlHeight));
 					moveBar = moveBar > 1 ? 1 : moveBar < 0 ? 0 : moveBar;
 
 				}
@@ -330,8 +329,7 @@ namespace cris
 	};
 	class CheckBox:public Control
 	{
-		bool click = false;
-	public:
+public:
 		bool isSelected;
 		CheckBox(float x,float y) :Control(x, y, 15, 15), isSelected(false)
 		{

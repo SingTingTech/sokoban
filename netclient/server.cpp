@@ -1,11 +1,11 @@
-#include<WinSock2.h>
-#include<windows.h>
-#include<iostream>
-#include<fstream>
+#include <WinSock2.h>
+#include <windows.h>
+#include <iostream>
+#include <fstream>
 #include <WS2tcpip.h>
-#include<ctime>
-#include<vector>
-#include"dao.h"
+#include <ctime>
+#include <vector>
+#include "dao.h"
 #pragma comment(lib,"ws2_32.lib")
 const int PORT = 9000;//端口号
 const std::string mapdir = "./maps/";//地图存储文件夹
@@ -35,6 +35,8 @@ public:
 		maps = map;
 		MapIterator = maps.begin();
 	}
+
+
 	void operator >> (char buf[])
 	{
 		if (first)
@@ -110,13 +112,13 @@ DWORD WINAPI clientProc(LPARAM lparam)
 
 				if (d.Login(userName, password))
 				{
-					strcpy_s(buf, 1024,"lt");
+					strcpy_s(buf, 1024, "lt");
 				}
 				else
 				{
 					memset(userName, 0, 21);
 					memset(password, 0, 30);
-					strcpy_s(buf,1024, "lfusername or password is incorrect");
+					strcpy_s(buf, 1024, "lfusername or password is incorrect");
 				}
 				isSent = false;
 				break;
@@ -130,7 +132,7 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				time_t t;
 				t = time(0);
 				tm time;
-				localtime_s(&time ,&t);
+				localtime_s(&time, &t);
 				SQL_DATE_STRUCT date;
 				date.year = time.tm_year + 1900;
 				date.month = time.tm_mon + 1;
@@ -150,47 +152,14 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				break;
 			}
 			case 'u'://上传请求
-			{
 				if (buf[1] == 't')
 					isprivate = true;
-				if (ismap) {
-					mapin = 2;
-					//读取地图数据
-					while (mapin < 1024 && buf[mapin] != 0 && buf[mapin] != ';')
-					{
-						buf[mapin++] = mapdata[mapout++];
-						if (mapout > 4096)
-						{
-							memset(buf, 0, 1024);
-							strcpy_s(buf, "uftoo large map");
-							isSent = false;
-							break;
-						}
-					}
-					if (mapin == 1024)
-					{
-						memset(buf, 0, 1024);
-						strcpy_s(buf, "v");
-						isSent = false;
-						break;//等待数据
-					}
-					if (buf[mapin] == 0)
-					{
-						memset(buf, 0, 1024);
-						strcpy_s(buf, "ufmap data format incorrect");
-						isSent = false;
-						break;
-					}
-					mapin++;
-					//读取解数据
-					mapout = 0;
-
-				}
-				while (mapin != 1024 && buf[mapin] != 0)
+				memset(mapdata, 0, 4096);
+				mapin = 2, mapout = 0;
+				while (mapin < 1024 && buf[mapin] != 0)
 				{
-
-					buf[mapin++] = mapdata[mapout++];
-					if (mapout > 4096)
+					mapdata[mapout++] = buf[mapin++];
+					if (mapout >= 4096)
 					{
 						memset(buf, 0, 1024);
 						strcpy_s(buf, "uftoo large map");
@@ -198,43 +167,109 @@ DWORD WINAPI clientProc(LPARAM lparam)
 						break;
 					}
 				}
-				if (mapin == 1024)
+				if (buf[mapin] == 0)
 				{
-					memset(buf, 0, 1024);
-					strcpy_s(buf, "v");
-					isSent = false;
-					break;//等待数据
-				}
-				if (buf[mapin] == 0) //数据读取完成
-				{
-					ismap = true;
+					//数据传输完成
 					std::ofstream fout;
-
 					sprintf_s(mappath, (mapdir + "%d.xsb").c_str(), mapname);
-					fout.open(mappath, std::ios::out);
+					fout.open(mappath);
 					fout << mapdata;
 					fout.flush();
 					fout.close();
 
-
-					EnterCriticalSection(&mapnamectrl);
-					sprintf_s(solpath, (mapdir + "%d.lurd").c_str(), mapname++);
-					LeaveCriticalSection(&mapnamectrl);
-					fout.open(solpath, std::ios::out);
-					fout << soldata;
-					fout.flush();
-					fout.close();
-
-
-					d.upload(mappath, solpath, true, userName);
+					d.upload(mappath, "", isprivate, userName);
 
 					memset(mappath, 0, sizeof mappath);
 					memset(buf, 0, 1024);
 					strcpy_s(buf, "ut");
 					isSent = false;
 				}
-				break;
-			}
+
+				//{
+				//	if (buf[1] == 't')
+				//		isprivate = true;
+				//	if (ismap) {
+				//		mapin = 2;
+				//		//读取地图数据
+				//		while (mapin < 1024 && buf[mapin] != 0 && buf[mapin] != ';')
+				//		{
+				//			mapdata[mapout++] = buf[mapin++];
+				//			if (mapout >= 4096)
+				//			{
+				//				memset(buf, 0, 1024);
+				//				strcpy_s(buf, "uftoo large map");
+				//				isSent = false;
+				//				break;
+				//			}
+				//		}
+				//		if (mapin == 1024)
+				//		{
+				//			memset(buf, 0, 1024);
+				//			strcpy_s(buf, "v");
+				//			isSent = false;
+				//			break;//等待数据
+				//		}
+				//		if (buf[mapin] == 0)
+				//		{
+				//			memset(buf, 0, 1024);
+				//			strcpy_s(buf, "ufmap data format incorrect");
+				//			isSent = false;
+				//			break;
+				//		}
+				//		mapin++;
+				//		//读取解数据
+				//		mapout = 0;
+
+				//	}
+				//	while (mapin != 1024 && buf[mapin] != 0)
+				//	{
+
+				//		mapdata[mapout++] = buf[mapin++];
+				//		if (mapout > 4096)
+				//		{
+				//			memset(buf, 0, 1024);
+				//			strcpy_s(buf, "uftoo large map");
+				//			isSent = false;
+				//			break;
+				//		}
+				//	}
+				//	if (mapin == 1024)
+				//	{
+				//		memset(buf, 0, 1024);
+				//		strcpy_s(buf, "v");
+				//		isSent = false;
+				//		break;//等待数据
+				//	}
+				//	if (buf[mapin] == 0) //数据读取完成
+				//	{
+				//		ismap = true;
+				//		std::ofstream fout;
+
+				//		sprintf_s(mappath, (mapdir + "%d.xsb").c_str(), mapname);
+				//		fout.open(mappath, std::ios::out);
+				//		fout << mapdata;
+				//		fout.flush();
+				//		fout.close();
+
+
+				//		EnterCriticalSection(&mapnamectrl);
+				//		sprintf_s(solpath, (mapdir + "%d.lurd").c_str(), mapname++);
+				//		LeaveCriticalSection(&mapnamectrl);
+				//		fout.open(solpath, std::ios::out);
+				//		fout << soldata;
+				//		fout.flush();
+				//		fout.close();
+
+
+				//		d.upload(mappath, solpath, true, userName);
+
+				//		memset(mappath, 0, sizeof mappath);
+				//		memset(buf, 0, 1024);
+				//		strcpy_s(buf, "ut");
+				//		isSent = false;
+				//	}
+				//	break;
+				//}
 			case 't'://额外数据块
 			{
 				//额外数据是地图还是解
@@ -243,7 +278,7 @@ DWORD WINAPI clientProc(LPARAM lparam)
 					//读取地图数据
 					while (mapin < 1024 && buf[mapin] != 0 && buf[mapin] != ';')
 					{
-						buf[mapin++] = mapdata[mapout++];
+						mapdata[mapout++] = buf[mapin++];
 						if (mapout > 4096)
 						{
 							memset(buf, 0, 1024);
@@ -269,7 +304,7 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				while (mapin != 1024 && buf[mapin] != 0)
 				{
 
-					buf[mapin++] = mapdata[mapout++];
+					mapdata[mapout++] = buf[mapin++];
 					if (mapout > 4096)
 					{
 						memset(buf, 0, 1024);
@@ -327,6 +362,21 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				isSent = false;
 				break;
 			}
+			case 'm':
+				std::vector<MapInfo> maps;
+				d.getMaps(userName, maps);
+				memset(buf, 0, 1024);
+				buf[0] = 'm';
+				int i = 1;
+				for (auto it = maps.begin(); it != maps.end(); ++it)
+				{
+					std::string s = it->mappath;
+					s.erase(s.end() - 5);
+					int i = std::stoi(s);
+					buf[i++] = i;
+				}
+				isSent = false;
+
 			}
 		}
 		// 0 代表客户端主动断开连接  

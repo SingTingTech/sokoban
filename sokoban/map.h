@@ -15,8 +15,7 @@ namespace cris {
 		int **mapContent;
 
 		map(int width, int height);
-	/*	void readMapFromFile(std::string fileName);*/
-
+		void cleanup();
 		bool dfs(Point start,Point end,std::vector<Point> &path,bool **visited) 
 		{
 			Point p = { 0,0 };
@@ -110,6 +109,7 @@ namespace cris {
 
 
 
+		void readMapFromFile(std::string fileName);
 
 		//从一个指定的xsb文件中构造map对象并将字符表示改为数字
 		map(std::string filename);

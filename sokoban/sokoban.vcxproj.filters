@@ -51,9 +51,6 @@
     <ClCompile Include="Control.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="maintest.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="direction.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -99,6 +96,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="direction.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MapStream.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -40,8 +40,7 @@ cris::map::map(std::string fileName)
 		if (line.length() > width)
 			width = line.length();
 	}
-	std::cout << height << '-' << width << std::endl;
-
+	height -= 3;
 	mapWidth = width;
 	mapHeight = height;
 	mapContent = new int*[height];
@@ -108,68 +107,101 @@ cris::map::map(std::string fileName)
 	file.clear();
 	file.close();
 }
-//
-//void cris::map::readMapFromFile(std::string fileName)
-//{
-//
-//	std::string line;
-//	int **p = mapContent;
-//	int lineNum = 0;
-//	bool f = false;
-//	std::fstream file;
-//	file.open(fileName, std::ios::in);
-//	while (!file.eof()) {
-//		std::getline(file, line);
-//
-//		for (int i = 0; i < 50; i++)
-//		{
-//			switch (line[i])
-//			{
-//				//箱子
-//			case '$':
-//				p[lineNum][i] = 1;
-//				break;
-//				//人
-//			case '@':
-//				p[lineNum][i] = 2;
-//				break;
-//				//箱子在目标点
-//			case '*':
-//				p[lineNum][i] = 3;
-//				break;
-//				//墙
-//			case '#':
-//				p[lineNum][i] = 4;
-//				break;
-//				//目标点
-//			case '.':
-//				p[lineNum][i] = 5;
-//				break;
-//				//地板
-//			case '-':
-//			case '_':
-//			case ' ':
-//				p[lineNum][i] = 6;
-//				break;
-//
-//
-//				//+  7 人再目标点
-//			case '+':
-//				p[lineNum][i] = 7;;
-//				break;
-//
-//			default:
-//				f = true;
-//			}
-//			if (f)
-//			{
-//				f = false;
-//				break;
-//			}
-//		}
-//		lineNum++;
-//	}
-//}
+
+void cris::map::readMapFromFile(std::string fileName)
+{
+	cleanup();
+	int width = 0;
+	int height = 0;
+	int lineNum = 0;
+	std::string line;
+	bool f = false;
+	std::fstream file;
+	file.open(fileName, std::ios::in);
+	while (!file.eof())
+	{
+		height++;
+
+		std::getline(file, line);
+		if (line.length() > width)
+			width = line.length();
+	}
+	height -= 3;
+	mapWidth = width;
+	mapHeight = height;
+	mapContent = new int*[height];
+	for (int i = 0; i < height; i++)
+	{
+		mapContent[i] = new int[width];
+		for (int j = 0; j < width; j++)
+		{
+			mapContent[i][j] = 6;
+		}
+	}	int **p = mapContent;
+
+	file.clear();
+	file.seekg(std::ios::beg);
+	while (!file.eof()) {
+		std::getline(file, line);
+
+		for (int i = 0; i < 50; i++)
+		{
+			switch (line[i])
+			{
+				//box
+			case '$':
+				p[lineNum][i] = 1;
+				break;
+				//human
+			case '@':
+				p[lineNum][i] = 2;
+				break;
+
+			case '*':
+				p[lineNum][i] = 3;
+				break;
+
+			case '#':
+
+				p[lineNum][i] = 4;
+				break;
+
+			case '.':
+				p[lineNum][i] = 5;
+				break;
+
+			case '-':
+			case '_':
+			case ' ':
+				p[lineNum][i] = 6;
+				break;
+			case '+':
+				p[lineNum][i] = 7;;
+				break;
+
+			default:
+				f = true;
+			}
+			if (f)
+			{
+				f = false;
+				break;
+			}
+		}
+		lineNum++;
+	}
+	file.clear();
+	file.close();
+}
+
+void cris::map::cleanup()
+{
+	for (int i = 0; i < mapHeight; i++)
+	{
+		delete mapContent[i];
+	}
+	delete mapContent;
+}
 
 void cris::map::printMap()
 {
@@ -625,11 +657,7 @@ void cris::map::back(direction lastdirection)
 }
 cris::map::~map()
 {
-	for (int i = 0; i < mapHeight; i++)
-	{
-		delete mapContent[i];
-	}
-	delete mapContent;
+	cleanup();
 }
 bool cris::map::jump(int i, int j,cris::user &u) 
 {
