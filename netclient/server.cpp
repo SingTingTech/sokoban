@@ -154,6 +154,8 @@ DWORD WINAPI clientProc(LPARAM lparam)
 			case 'u'://上传请求
 				if (buf[1] == 't')
 					isprivate = true;
+				else
+					isprivate = false;
 				memset(mapdata, 0, 4096);
 				mapin = 2, mapout = 0;
 				while (mapin < 1024 && buf[mapin] != 0)
@@ -171,141 +173,37 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				{
 					//数据传输完成
 					std::ofstream fout;
-					sprintf_s(mappath, (mapdir + "%d.xsb").c_str(), mapname);
+
+					EnterCriticalSection(&mapnamectrl);
+					sprintf_s(mappath, (mapdir + "%d.xsbs").c_str(), mapname++);
+					LeaveCriticalSection(&mapnamectrl);
+
 					fout.open(mappath);
 					fout << mapdata;
 					fout.flush();
 					fout.close();
-
-					d.upload(mappath, "", isprivate, userName);
+					char solpath[20] = { 0 };
+					d.upload(mappath, solpath, isprivate, userName);
 
 					memset(mappath, 0, sizeof mappath);
 					memset(buf, 0, 1024);
 					strcpy_s(buf, "ut");
 					isSent = false;
 				}
-
-				//{
-				//	if (buf[1] == 't')
-				//		isprivate = true;
-				//	if (ismap) {
-				//		mapin = 2;
-				//		//读取地图数据
-				//		while (mapin < 1024 && buf[mapin] != 0 && buf[mapin] != ';')
-				//		{
-				//			mapdata[mapout++] = buf[mapin++];
-				//			if (mapout >= 4096)
-				//			{
-				//				memset(buf, 0, 1024);
-				//				strcpy_s(buf, "uftoo large map");
-				//				isSent = false;
-				//				break;
-				//			}
-				//		}
-				//		if (mapin == 1024)
-				//		{
-				//			memset(buf, 0, 1024);
-				//			strcpy_s(buf, "v");
-				//			isSent = false;
-				//			break;//等待数据
-				//		}
-				//		if (buf[mapin] == 0)
-				//		{
-				//			memset(buf, 0, 1024);
-				//			strcpy_s(buf, "ufmap data format incorrect");
-				//			isSent = false;
-				//			break;
-				//		}
-				//		mapin++;
-				//		//读取解数据
-				//		mapout = 0;
-
-				//	}
-				//	while (mapin != 1024 && buf[mapin] != 0)
-				//	{
-
-				//		mapdata[mapout++] = buf[mapin++];
-				//		if (mapout > 4096)
-				//		{
-				//			memset(buf, 0, 1024);
-				//			strcpy_s(buf, "uftoo large map");
-				//			isSent = false;
-				//			break;
-				//		}
-				//	}
-				//	if (mapin == 1024)
-				//	{
-				//		memset(buf, 0, 1024);
-				//		strcpy_s(buf, "v");
-				//		isSent = false;
-				//		break;//等待数据
-				//	}
-				//	if (buf[mapin] == 0) //数据读取完成
-				//	{
-				//		ismap = true;
-				//		std::ofstream fout;
-
-				//		sprintf_s(mappath, (mapdir + "%d.xsb").c_str(), mapname);
-				//		fout.open(mappath, std::ios::out);
-				//		fout << mapdata;
-				//		fout.flush();
-				//		fout.close();
-
-
-				//		EnterCriticalSection(&mapnamectrl);
-				//		sprintf_s(solpath, (mapdir + "%d.lurd").c_str(), mapname++);
-				//		LeaveCriticalSection(&mapnamectrl);
-				//		fout.open(solpath, std::ios::out);
-				//		fout << soldata;
-				//		fout.flush();
-				//		fout.close();
-
-
-				//		d.upload(mappath, solpath, true, userName);
-
-				//		memset(mappath, 0, sizeof mappath);
-				//		memset(buf, 0, 1024);
-				//		strcpy_s(buf, "ut");
-				//		isSent = false;
-				//	}
-				//	break;
-				//}
+				else
+				{
+					memset(buf, 0, 1024);
+					strcpy_s(buf, "v");
+					isSent = false;
+				}
+				break;
 			case 't'://额外数据块
 			{
-				//额外数据是地图还是解
-				if (ismap) {
-					mapin = 1;
-					//读取地图数据
-					while (mapin < 1024 && buf[mapin] != 0 && buf[mapin] != ';')
-					{
-						mapdata[mapout++] = buf[mapin++];
-						if (mapout > 4096)
-						{
-							memset(buf, 0, 1024);
-							strcpy_s(buf, "uftoo large map");
-							isSent = false;
-							break;
-						}
-					}
-					if (mapin == 1024)
-						break;//等待数据
-					if (buf[mapin] == 0)
-					{
-						memset(buf, 0, 1024);
-						strcpy_s(buf, "ufmap data format incorrect");
-						isSent = false;
-						break;
-					}
-					mapin++;
-					//读取解数据
-					mapout = 0;
-
-				}
-				while (mapin != 1024 && buf[mapin] != 0)
+				mapin = 1;
+				while (mapin < 1024 && buf[mapin] != 0)
 				{
-
 					mapdata[mapout++] = buf[mapin++];
-					if (mapout > 4096)
+					if (mapout >= 4096)
 					{
 						memset(buf, 0, 1024);
 						strcpy_s(buf, "uftoo large map");
@@ -313,38 +211,42 @@ DWORD WINAPI clientProc(LPARAM lparam)
 						break;
 					}
 				}
-				if (mapin == 1024)
-					break;//等待数据
-				if (buf[mapin] == 0) //数据读取完成
+				if (buf[mapin] == 0)
 				{
-					ismap = true;
+					//数据传输完成
 					std::ofstream fout;
 
-					sprintf_s(mappath, (mapdir + "%d.xsb").c_str(), mapname);
-					fout.open(mappath, std::ios::out);
+					EnterCriticalSection(&mapnamectrl);
+					sprintf_s(mappath, (mapdir + "%d.xsbs").c_str(), mapname++);
+					LeaveCriticalSection(&mapnamectrl);
+
+					fout.open(mappath);
 					fout << mapdata;
 					fout.flush();
 					fout.close();
-
-
-					EnterCriticalSection(&mapnamectrl);
-					sprintf_s(solpath, (mapdir + "%d.lurd").c_str(), mapname++);
-					LeaveCriticalSection(&mapnamectrl);
-					fout.open(solpath, std::ios::out);
-					fout << soldata;
-					fout.flush();
-					fout.close();
-
-
-					d.upload(mappath, solpath, true, userName);
+					char solpath[20] = { 0 };
+					d.upload(mappath, solpath, isprivate, userName);
 
 					memset(mappath, 0, sizeof mappath);
 					memset(buf, 0, 1024);
 					strcpy_s(buf, "ut");
 					isSent = false;
 				}
+				else
+				{
+					memset(buf, 0, 1024);
+					strcpy_s(buf, "v");
+					isSent = false;
+				}
 				break;
 			}
+			case 'v'://反复请求
+			{
+				ms >> buf;
+				isSent = false;
+				break;
+			}
+
 			case 'd'://下载地图请求
 			{
 				std::vector<MapInfo> maps;
@@ -356,13 +258,10 @@ DWORD WINAPI clientProc(LPARAM lparam)
 
 
 			}
-			case 'v'://反复发送
-			{
-				ms >> buf;
-				isSent = false;
-				break;
-			}
+
 			case 'm':
+				;
+
 				std::vector<MapInfo> maps;
 				d.getMaps(userName, maps);
 				memset(buf, 0, 1024);
@@ -376,8 +275,8 @@ DWORD WINAPI clientProc(LPARAM lparam)
 					buf[i++] = i;
 				}
 				isSent = false;
-
 			}
+			
 		}
 		// 0 代表客户端主动断开连接  
 		if (ret == 0)
@@ -464,6 +363,7 @@ int ServerSocket(int Port)
 
 	SOCKADDR_IN addrClient; // 用于保存客户端的网络节点的信息  
 	int addrClientLen = sizeof(SOCKADDR_IN);
+	InitializeCriticalSection(&mapnamectrl);
 	while (TRUE)
 	{
 		Sleep(10);
@@ -490,6 +390,7 @@ int ServerSocket(int Port)
 	}
 	closesocket(sServer);
 	WSACleanup();
+	DeleteCriticalSection(&mapnamectrl);
 	return 0;
 }
 int main()

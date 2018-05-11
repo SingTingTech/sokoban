@@ -13,7 +13,6 @@ namespace cris {
 
 		int mapWidth, mapHeight;
 		int **mapContent;
-
 		map(int width, int height);
 		void cleanup();
 		bool dfs(Point start,Point end,std::vector<Point> &path,bool **visited) 
@@ -106,6 +105,7 @@ namespace cris {
 			}
 		}
 	public:
+		std::string mappath;
 
 
 
@@ -131,7 +131,7 @@ namespace cris {
 
 		//模拟人在d方向上行走一步
 		bool step(direction d);
-		void back(direction d);
+		void back(user&u);
 		bool isComplete() 
 		{
 			for(int i=0;i<mapHeight;i++)

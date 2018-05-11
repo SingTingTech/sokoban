@@ -27,7 +27,7 @@ public:
 		}
 		else
 			buf[0] = 't';
-		
+		fin.read(buf + 1, 1023);
 	}
 	~MapStream()
 	{

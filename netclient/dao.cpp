@@ -49,7 +49,7 @@ int Dao::Register(char *name, char *pass, SQL_DATE_STRUCT regdate, bool isadmin)
 	SQLPrepare(hstmt, x, strlen((char*)x));
 	ret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 21, 0, name, 0, 0);
 	ret = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 33, 0, passwd, 0, 0);
-	ret = SQLBindParameter(hstmt, 3, SQL_PARAM_INPUT, SQL_C_DATE, SQL_DATE, 0, 0, &regdate, 0, 0);
+	 ret = SQLBindParameter(hstmt, 3, SQL_PARAM_INPUT, SQL_C_DATE, SQL_DATE, 0, 0, &regdate, 0, 0);
 	ret = SQLBindParameter(hstmt, 4, SQL_PARAM_INPUT, SQL_C_TINYINT, SQL_TINYINT, 0, 0, &isadmin, 0, 0);
 
 	ret = SQLExecute(hstmt);
@@ -139,15 +139,15 @@ bool Dao::Login(char * username, char * password)
 
 int Dao::upload(char * mapPath, char * soluPath, bool isPrivate, char * uploader)
 {
-	UCHAR x[] = "INSERT INTO MAP(mappth,solutionpath,private,userid) VALUES(?,?,?,?)";
+	UCHAR x[] = "INSERT INTO MAP(mappath,solutionpath,private,userid) VALUES(?,?,?,?);";
 
 	RETCODE ret;
 	ret = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 	SQLPrepare(hstmt, x, strlen((char*)x));
-	ret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 21, 0, mapPath, 0, 0);
-	ret = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 33, 0, soluPath, 0, 0);
+	ret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 20, 0, mapPath, 0, 0);
+	ret = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 20, 0, soluPath, 0, 0);
 	ret = SQLBindParameter(hstmt, 3, SQL_PARAM_INPUT, SQL_C_TINYINT, SQL_TINYINT, 0, 0, &isPrivate, 0, 0);
-	ret = SQLBindParameter(hstmt, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 0, 0, &uploader, 0, 0);
+	ret = SQLBindParameter(hstmt, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 21, 0, uploader, 0, 0);
 	ret = SQLExecute(hstmt);
 	SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
 	if (!ret)
@@ -155,6 +155,8 @@ int Dao::upload(char * mapPath, char * soluPath, bool isPrivate, char * uploader
 		std::cout << "上传成功！";
 		return 0;
 	}
+	std::cout << ret;
+
 	std::cout << "上传失败！";
 	return -1;
 }
@@ -169,9 +171,10 @@ void Dao::getMaps(char * user,std::vector<MapInfo> &mapInfos)
 	SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 	ret = SQLPrepare(hstmt, x, strlen((char*)x));
 	ret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 21, 0, user, 0, 0);
-	SQLBindCol(hstmt, 2, SQL_C_CHAR, mappath, 21, 0);
-	SQLBindCol(hstmt, 3, SQL_C_CHAR, solutionpath, 33, 0);
-	SQLBindCol(hstmt, 5, SQL_C_STINYINT, &isprivate, sizeof isprivate, 0);
+	SQLBindCol(hstmt, 1, SQL_C_CHAR, mappath, 21, 0);
+	SQLBindCol(hstmt, 2, SQL_C_CHAR, solutionpath, 33, 0);
+	SQLBindCol(hstmt, 3, SQL_C_STINYINT, &isprivate, sizeof isprivate, 0);
+	SQLExecute(hstmt);
 	while (!SQLFetch(hstmt))
 	{
 		//遍历操作

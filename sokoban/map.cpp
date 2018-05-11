@@ -110,6 +110,7 @@ cris::map::map(std::string fileName)
 
 void cris::map::readMapFromFile(std::string fileName)
 {
+	mappath = fileName;
 	cleanup();
 	int width = 0;
 	int height = 0;
@@ -509,151 +510,27 @@ bool cris::map::step(direction d)
 	}
 	return false;
 }
-void cris::map::back(direction lastdirection)
+void cris::map::back(cris::user &u)
 {
-	Point p;
-	Point man;
-	getMenPos(&man);
-	nextPos(lastdirection, man, &p);
-	Point lastpos;
-	switch (lastdirection) 
+	readMapFromFile(mappath);
+	for (int i = 0; i < u.lurd.size(); i++) 
 	{
-	case up:
-		nextPos(down, man, &lastpos);
-		break;
-	case down:
-		nextPos(up, man, &lastpos);
-		break;
-	case right:
-		nextPos(left, man, &lastpos);
-		break;
-	case left:
-		nextPos(right, man, &lastpos);
-		break;
-	}
-	
-	/*
-		//box		
-		case '$' = 1;
-		//human	
-		case '@' = 2;
-		//box on target
-		case '*' = 3;
-		//wall
-		case '#' = 4;
-		//target
-		case '.' = 5;
-		//ground
-		case '-':
-		case '_':
-		case ' ' = 6;
-		//man on target	
-		case '+' = 7;;
-				break;
-				*/
-	switch (mapContent[man.x][man.y]) 
-	{
-		//man on target   +
-	case 7:
-		switch (mapContent[p.x][p.y]) 
+		switch (u.lurd[i]) 
 		{
-			//推过箱子    +$
-		case 1:
-			switch (mapContent[lastpos.x][lastpos.y])
-			{
-			case 6://	_+$ => @*_
-				mapContent[lastpos.x][lastpos.y] = 2;				
-				mapContent[man.x][man.y] = 3;
-				mapContent[p.x][p.y] = 6;
-				break;
-			case 5://	.+$ => +*_
-				mapContent[lastpos.x][lastpos.y] = 7;
-				mapContent[man.x][man.y] = 3;
-				mapContent[p.x][p.y] = 6;
-				break;
-			}
-		case 3://		+*
-			switch (mapContent[lastpos.x][lastpos.y])
-			{
-			case 6://	_+* => @*.
-				mapContent[lastpos.x][lastpos.y] = 2;
-				mapContent[man.x][man.y] = 3;
-				mapContent[p.x][p.y] = 5;
-				break;
-			case 5://	.+* => +*.
-				mapContent[lastpos.x][lastpos.y] = 7;
-				mapContent[man.x][man.y] = 3;
-				mapContent[p.x][p.y] = 5;
-				break;
-
-			}
-			//未推过箱子
-		case 4:
-		case 5:
-		case 6:
-			switch (mapContent[lastpos.x][lastpos.y]) 
-			{
-			case 6://	_+| => @.|
-				mapContent[lastpos.x][lastpos.y] = 2;
-				mapContent[man.x][man.y] = 5;
-				break;
-			case 5://	.+* => +.|
-				mapContent[lastpos.x][lastpos.y] = 7;
-				mapContent[man.x][man.y] = 5;
-				break;
-			}
-		
-		}
-	case 2:
-		switch (mapContent[p.x][p.y])
-		{
-				//推过箱子    @$
-			case 1:
-				switch (mapContent[lastpos.x][lastpos.y])
-				{
-				case 6://	_@$ => @$_
-					mapContent[lastpos.x][lastpos.y] = 2;
-					mapContent[man.x][man.y] = 1;
-					mapContent[p.x][p.y] = 6;
-					break;
-				case 5://	.@$ => +$_
-					mapContent[lastpos.x][lastpos.y] = 7;
-					mapContent[man.x][man.y] = 1;
-					mapContent[p.x][p.y] = 6;
-					break;
-				}
-			case 3://		@*
-				switch (mapContent[lastpos.x][lastpos.y])
-				{
-				case 6://	_@* => @$.
-					mapContent[lastpos.x][lastpos.y] = 2;
-					mapContent[man.x][man.y] = 1;
-					mapContent[p.x][p.y] = 5;
-					break;
-				case 5://	.@* => +$.
-					mapContent[lastpos.x][lastpos.y] = 7;
-					mapContent[man.x][man.y] = 1;
-					mapContent[p.x][p.y] = 5;
-					break;
-				}
-			//
-		case 4:
-		case 5:
-		case 6:
-			switch (mapContent[lastpos.x][lastpos.y])
-			{
-			case 6://	_+| => @_|
-				mapContent[lastpos.x][lastpos.y] = 2;
-				mapContent[man.x][man.y] = 6;
-				break;
-			case 5://	.+* => +_|
-				mapContent[lastpos.x][lastpos.y] = 7;
-				mapContent[man.x][man.y] = 6;
-				break;
-			}
+		case 'l':
+			step(left);
+			break;
+		case 'u':
+			step(up);
+			break;
+		case 'r':
+			step(right);
+			break;
+		case 'd':
+			step(down);
+			break;
 		}
 	}
-
 }
 cris::map::~map()
 {

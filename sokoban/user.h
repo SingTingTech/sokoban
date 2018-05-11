@@ -4,6 +4,7 @@
 namespace cris {
 	class user
 	{
+		bool logined = false;
 	public:
 		std::string username;
 		std::string passwd;
@@ -24,13 +25,21 @@ namespace cris {
 
 		bool getLogin()
 		{
-			std::string s;
-			std::ifstream fin;
-			fin.open(".\\save\\l", std::ios::in);
-			if (!fin) return false;
-			fin >> s;
-			read(s);
-			return true;
+			if (!logined)
+			{
+				std::string s;
+				std::ifstream fin;
+				fin.open(".\\save\\l", std::ios::in);
+				if (!fin) return false;
+				fin >> s;
+				read(s);
+				logined = true;
+				return true;
+
+			}
+			else
+				return true;
+			
 		}
 		void read(std::string username)
 		{

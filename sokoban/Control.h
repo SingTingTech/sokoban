@@ -13,10 +13,15 @@ namespace cris
 		
 	protected:
 		static bool click;
+	
 		HWND hwnd;	//父窗口句柄
 		HCURSOR hcursor;
 		D2D1_RECT_F size;//窗口大小
 	public:
+		static HWND shwnd;
+		static HCURSOR shcur;
+		static cris::my2d &smy2d;
+		static cris::DXInput &sinput;
 		static unsigned int focus;
 		Control(float x, float y, float width, float height) {
 			size.left = x;
@@ -32,9 +37,11 @@ namespace cris
 			return p.x<size.right&&p.x>size.left&&p.y > size.top&&p.y < size.bottom;
 		}
 		wchar_t controlText[1024];
-		virtual void draw(my2d &my2ddraw) //绘制
+		virtual void draw() //绘制
 		{
 
+			hwnd = shwnd;
+			hcursor = hcursor == NULL ? shcur : hcursor;
 			if (mouseOn())
 			{
 				SetCursor(hcursor);
@@ -43,7 +50,7 @@ namespace cris
 
 		}
 		template<class T>
-		void testKeys(DXInput &d, T t)
+		void testKeys(T t)
 		{
 
 		};//获取按键信息
@@ -74,19 +81,19 @@ namespace cris
 			memset(controlText, 0, 1024);
 			wsprintf(controlText, L"%d", i);
 		}
-		virtual void draw(my2d &my2ddraw)
+		virtual void draw()
 		{
 
-			Control::draw(my2ddraw);
-			my2ddraw.pRT->DrawText(controlText, wcslen(controlText),
-				my2ddraw.textNormal,
+			Control::draw();
+			smy2d.pRT->DrawText(controlText, wcslen(controlText),
+				smy2d.textNormal,
 				size,
-				my2ddraw.pGrayBrush);
+				smy2d.pGrayBrush);
 		};
 		template<class T>
-		void testKeys(DXInput &d, T t) {
+		void testKeys(T t) {
 			
-			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			if (sinput.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
 				if (mouseOn() && click)
 				{
@@ -129,10 +136,10 @@ namespace cris
 				return;
 			controlText[cur++] = ch;
 		}
-		virtual void draw(my2d &my2ddraw)
+		virtual void draw()
 		{
 
-			Control::draw(my2ddraw);
+			Control::draw();
 			
 			wchar_t outtext[1024];
 			memset(outtext, 0, 1024);
@@ -147,15 +154,15 @@ namespace cris
 			{
 				wcscpy_s(outtext, controlText);
 			}
-			my2ddraw.pRT->DrawText(outtext, wcslen(outtext),
-				my2ddraw.textNormal,
+			smy2d.pRT->DrawText(outtext, wcslen(outtext),
+				smy2d.textNormal,
 				size,
-				my2ddraw.pGrayBrush);
-			my2ddraw.pRT->DrawLine(D2D1::Point2F(size.left, size.bottom), D2D1::Point2F(size.right, size.bottom), my2ddraw.pGrayBrush);
+				smy2d.pGrayBrush);
+			smy2d.pRT->DrawLine(D2D1::Point2F(size.left, size.bottom), D2D1::Point2F(size.right, size.bottom), smy2d.pGrayBrush);
 		/*	my2ddraw.pRT->DrawLine(D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.top), D2D1::Point2F(wcslen(controlText)*10.5 + size.left, size.bottom), my2ddraw.pGrayBrush);
 		*/};
-		void testKeys(DXInput &d) {
-			if ( d.isMouseButtonDown(DXInput::LEFTBUTTON))
+		void testKeys() {
+			if (sinput.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
 				if (mouseOn() && click)
 				{
@@ -206,17 +213,17 @@ namespace cris
 			if (i >= 0 && i <= 1)
 				moveBar = i;
 		}
-		void draw(my2d &my2ddraw)
+		void draw()
 		{
-			Control::draw(my2ddraw);
-			my2ddraw.pRT->FillRectangle(size, my2ddraw.pListBrush);
+			Control::draw();
+			smy2d.pRT->FillRectangle(size, smy2d.pListBrush);
 			float fullSize = list.size() * 20;
 			float controlHeight = size.bottom - size.top;
 			if (fullSize < controlHeight)
 			{
 				//无滚动条
 				if (cursor >= 0)
-					my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, size.top + 20.0f*cursor, size.right, size.top + 20.0f * cursor + 20.f), my2ddraw.pDarkBrush);
+					smy2d.pRT->FillRectangle(D2D1::Rect(size.left, size.top + 20.0f*cursor, size.right, size.top + 20.0f * cursor + 20.f), smy2d.pDarkBrush);
 				float fullSize = list.size() * 20;
 
 				wchar_t buffer[30] = { 0 };
@@ -225,10 +232,10 @@ namespace cris
 				{
 					memset(buffer, 0, 30);
 					MultiByteToWideChar(CP_ACP, 0, list[i].c_str(), list[i].length(), buffer, 30);
-					my2ddraw.pRT->DrawText(buffer, 30,
-						my2ddraw.textSmall,
+					smy2d.pRT->DrawText(buffer, 30,
+						smy2d.textSmall,
 						D2D1::Rect(size.left, size.top + 20.0f*i, size.right, size.top + 20.0f * (i + 1)),
-						my2ddraw.pGrayBrush);
+						smy2d.pGrayBrush);
 				}
 			}
 			else
@@ -242,7 +249,7 @@ namespace cris
 					top = a + 20.0f*cursor < size.top ? size.top : a + 20.0f*cursor;
 					bottom = a + 20.0f * (cursor + 1) > size.bottom ? size.bottom : a + 20.0f * (cursor + 1);
 					if(top<bottom)
-						my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, top, size.right - 25, bottom), my2ddraw.pDarkBrush);
+						smy2d.pRT->FillRectangle(D2D1::Rect(size.left, top, size.right - 25, bottom), smy2d.pDarkBrush);
 				}
 					
 				float moveBarLength = controlHeight*(controlHeight / fullSize);
@@ -263,19 +270,19 @@ namespace cris
 
 					memset(buffer, 0, 30);
 					MultiByteToWideChar(CP_ACP, 0, list[i].c_str(), list[i].length(), buffer, 30);
-					my2ddraw.pRT->DrawText(buffer, 30, my2ddraw.textSmall, D2D1::Rect(size.left, a + 20.0f*i, size.right - 25, a + 20.0f * (i + 1) > size.bottom ? size.bottom : a + 20.0f * (i + 1)), my2ddraw.pGrayBrush, D2D1_DRAW_TEXT_OPTIONS_CLIP);
+					smy2d.pRT->DrawText(buffer, 30, smy2d.textSmall, D2D1::Rect(size.left, a + 20.0f*i, size.right - 25, a + 20.0f * (i + 1) > size.bottom ? size.bottom : a + 20.0f * (i + 1)), smy2d.pGrayBrush, D2D1_DRAW_TEXT_OPTIONS_CLIP);
 				}
 				//绘制滑块
-				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.right - 25, size.top + startPoint, size.right, size.top + startPoint + moveBarLength), my2ddraw.pLightBrush);
+				smy2d.pRT->FillRectangle(D2D1::Rect(size.right - 25, size.top + startPoint, size.right, size.top + startPoint + moveBarLength), smy2d.pLightBrush);
 				//抹除顶部
-				my2ddraw.pRT->FillRectangle(D2D1::Rect(size.left, size.top -20, size.right, size.top), my2ddraw.pBgBrush);
+				smy2d.pRT->FillRectangle(D2D1::Rect(size.left, size.top -20, size.right, size.top), smy2d.pBgBrush);
 
 
 			}
 
 		}
 	
-		void testKeys(DXInput &d)
+		void testKeys()
 		{
 			POINT p;
 			GetCursorPos(&p);
@@ -287,7 +294,7 @@ namespace cris
 			float a = size.top - (fullSize - controlHeight)*moveBar;
 			//*/鼠标监测
 			static bool drag = false;
-			if (d.isMouseButtonDown(DXInput::LEFTBUTTON))
+			if (sinput.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
 				if (click)
 				{
@@ -312,7 +319,7 @@ namespace cris
 				}
 				if (drag)
 				{
-					int i = d.getMouseYCoordinate();
+					int i = sinput.getMouseYCoordinate();
 					moveBar += i / (50.0f*(fullSize/controlHeight));
 					moveBar = moveBar > 1 ? 1 : moveBar < 0 ? 0 : moveBar;
 
@@ -335,23 +342,23 @@ public:
 		{
 			
 		}
-		void draw(my2d my2ddraw) 
+		void draw()
 		{
-			Control::draw(my2ddraw);
+			Control::draw();
 			//bg
-			my2ddraw.pRT->FillRectangle(size, my2ddraw.pGrayBrush);
+			smy2d.pRT->FillRectangle(size, smy2d.pGrayBrush);
 			
 		
 			if(isSelected)//checked
-				my2ddraw.pRT->FillRectangle(D2D1::RectF(size.left+2.5,size.top+2.5,size.right-2.5,size.bottom-2.5), my2ddraw.pDarkBrush);
+				smy2d.pRT->FillRectangle(D2D1::RectF(size.left+2.5,size.top+2.5,size.right-2.5,size.bottom-2.5), smy2d.pDarkBrush);
 			else//unchecked			
-				my2ddraw.pRT->FillRectangle(D2D1::RectF(size.left + 2.5, size.top + 2.5, size.right - 2.5, size.bottom - 2.5), my2ddraw.pBgBrush);
+				smy2d.pRT->FillRectangle(D2D1::RectF(size.left + 2.5, size.top + 2.5, size.right - 2.5, size.bottom - 2.5), smy2d.pBgBrush);
 
 
 		}
-		void testKeys(DXInput &d)
+		void testKeys()
 		{
-		if ( d.isMouseButtonDown(DXInput::LEFTBUTTON))
+		if ( sinput.isMouseButtonDown(DXInput::LEFTBUTTON))
 			{
 				if (mouseOn() && click)
 				{
@@ -398,12 +405,15 @@ public:
 		int y = 0;
 		int scaler;//startpoint
 		POINT sp;
+		my2d my2ddraw;
+
 	public:
 		direction lastDirection = down;
 
-		void init(HWND hwnd,HINSTANCE hinst,my2d my2ddraw)
+		void init(HWND hwnd,HINSTANCE hinst,my2d &my2ddraw)
 		{
 			this->hwnd = hwnd;
+			this->my2ddraw = my2ddraw;
 			d2.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D2, 50, 0);
 			d12.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D12, 50, 0);
 			d11.loadPNG(hinst, my2ddraw.pRT, IDB_HUMAN_D11, 50, 0);
@@ -439,7 +449,7 @@ public:
 			bot.cleanup();
 
 		}
-		void draw(my2d my2ddraw) 
+		void draw() 
 		{
 			scaler = m.getHeight() < m.getWidth() ? m.getWidth() : m.getHeight();
 			scaler = 600 / scaler;
@@ -457,8 +467,7 @@ public:
 					{
 #define RECTIJ(i,j) D2D1::RectF(j * scaler+sp.x, i * scaler+sp.y, (j + 1) * scaler+sp.x, (i + 1) * scaler+sp.y)
 #define HUMANRECT(i,j)  D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler +sp.x, i*scaler+sp.y, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler+sp.x, (i + 1) * scaler+sp.y)
-						//#define RECTIJ(i,j)	D2D1::RectF(100 + j * scaler, i * scaler, 100 + (j + 1) * scaler, (i + 1) * scaler)
-						//#define HUMANRECT(i,j) D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler + 100, i*scaler, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler + 100, (i + 1) * scaler)
+						
 						//箱子
 					case 1:
 						my2ddraw.pRT->DrawBitmap(ground.pBitmap, RECTIJ(i, j));

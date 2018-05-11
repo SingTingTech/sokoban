@@ -170,5 +170,11 @@
     <Image Include="PNG\EndPoint_Blue.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="PNG\Crate_Beige.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="PNG\GroundGravel_Grass.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
