@@ -18,10 +18,14 @@
 #define IDB_HUMAN_L2 IDB_PNG13
 #define IDB_HUMAN_R1 IDB_PNG14
 #define IDB_HUMAN_R2 IDB_PNG15
+#define IDB_SELECTED IDB_PNG19
+#define IDB_RUBBER IDB_PNG20
+
 #define IDC_MYIBEAM IDC_CURSOR1
 
 #include <string>
 #include <fstream>
+#include <exception>
 #include <stdio.h>  
 #include <iostream>
 #include <winsock2.h>   

@@ -6,6 +6,7 @@
 #include"tools.h"
 #include"MapStream.h"
 #include"Control.h"
+//#define TEST
 using cris::direction;
 using cris::down;
 using cris::up;
@@ -31,11 +32,17 @@ namespace app {
 	//当前用户信息
 	cris::user u;
 	cris::GameControl game = { u,m };
-	//初始化焦点
+
+	cris::BrushChooseControl brush = { 0,100 };
+	cris::DesignControl design;
+
+
 
 }
+//初始化焦点
+
 unsigned int cris::Control::focus = -1;
-bool cris::Control::click = false;
+//bool cris::Control::click = false;
 HWND cris::Control::shwnd = 0;
 HCURSOR cris::Control::shcur = 0;
 cris::my2d &cris::Control::smy2d = app::my2ddraw;
@@ -46,7 +53,11 @@ LRESULT CALLBACK windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 //加载存档
 void loadsaves(cris::ListControl &userlist);
 void loadmaps(cris::ListControl &maplist);
-
+void reloadmaps(cris::ListControl &list)
+{
+	list.list.clear();
+	loadmaps(list);
+}
 //初始化
 void init(HWND hwnd, HINSTANCE hinst);
 
@@ -72,24 +83,34 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	cris::TextControl back = { 400, 400,50,25, L"返回" };
 	//游戏界面
 	cris::TextControl gameback = { 0,0,50,25, L"返回" };
-	cris::TextControl backward = { 688,400,100,25,L"后退一步" };
-	cris::TextControl next = { 688,300,100,25,L"下一关" };
+	cris::TextControl backward = { 710,400,100,25,L"后退一步" };
+	cris::TextControl next = { 710,300,100,25,L"下一关" };
+	cris::TextControl pre = { 710,275,100,25,L"上一关" };
+	cris::TextControl cur = { 0,400,125,50 ,L""};
 	//主界面
 	cris::TextControl restore = { 275, 200,100,25,L"继续游戏" };
 	cris::TextControl title = { 300, 100,75,25, L"推箱子" };
-	cris::TextControl start = { 275, 225,100,25,L"关卡选择" };
+	cris::TextControl start = { 275, 250,100,25,L"关卡选择" };
+	cris::TextControl leveldesign = { 275,300,100,25,L"关卡设计" };
 	cris::TextControl usertitle = { 0,0,400,25,L"" };
+
 	//地图选择界面
 	cris::TextControl levelstart = { 425, 150,100,25,L"开始游戏" };
 	cris::ListControl maplist = { 200, 150, 200, 300 };
 	cris::TextControl upload = { 425, 200,100,25,L"上传地图" };
 	cris::TextControl download = { 425, 250,100,25,L"下载地图" };
-	
+	//地图设计界面
+	cris::BrushSymbol bs = cris::BrushSymbol::human;
+	cris::TextControl save = { 750, 400,50,25,L"保存" };
 	//test
-	cris::TextControl test = { 0,400,200,300,L"" };
-	
+	cris::TextControl test = { 0,700,200,300,L"" };
 	//
+
 	int scene = 3;//默认主菜单
+#ifdef TEST
+	scene = -1;
+#endif // test
+
 	HWND hwnd;
 	createWndAndUpdate(&hwnd, hinst, arrow, nCmdShow);
 	//ini
@@ -97,11 +118,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		cris::Control::shwnd = hwnd;
 		cris::Control::shcur = hand;
 		title.setCursor(arrow);
-		loadmaps(maplist);
 		loadsaves(userlist);
 		app::username.setCursor(ibeam);
 		app::passwd.setCursor(ibeam);
-
+		loadmaps(maplist);
 		std::cout;
 		init(hwnd, hinst);
 	}
@@ -150,6 +170,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		username1.draw();
 		app::username.draw();
 		app::passwd.draw();
+		test.draw();
 
 	};
 	//主界面渲染
@@ -164,6 +185,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		start.draw();
 		usertitle.draw();
 		restore.draw();
+		leveldesign.draw();
 		//帧数监测
 		freq++;
 		timer.stop();
@@ -174,19 +196,21 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 			timer.start();
 
 		}
-
 		freqx.draw();
-
-
-
 	};
 	//游戏界面渲染
 	auto fun4 = [&]()
 	{
+		char buf[25] = {0};
+		sprintf_s(buf, "当前关卡:\n%d", maplist.cursor);
+		cur << buf;
+
+		cur.draw();
 		app::game.draw();
 		gameback.draw();
 		backward.draw();
 		next.draw();
+		pre.draw();
 	};
 	//地图选择界面
 	auto fun5 = [&]()
@@ -228,12 +252,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		wchar_t savepath[] = L".\\maps";
 		cris::findXSBs(savepath, maps);
 		//排序方便查找
-		std::sort(maps.begin(), maps.end(), [](std::string a, std::string b)->bool
-		{
-			int x = std::stoi(a);
-			int y = std::stoi(b);
-			return x < y;
-		});
+		std::sort(maps.begin(), maps.end(), cris::mystrcmp);
 		for (int i = 0; i < 1024; i++)
 		{
 			if (buf[i] == 0)
@@ -307,7 +326,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					}
 					if (buf[1] == 't')
 					{
-
 						app::u.username = lusername;
 						app::u.passwd = lpasswd;
 						app::u.current = -1;
@@ -324,7 +342,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					}
 				});
 				back.testKeys([&scene]() {scene = 0; });
-
 				app::username.testKeys();
 				app::passwd.testKeys();
 				break;
@@ -391,6 +408,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 
 				app::input.getInput();
 				app::my2ddraw.draw(fun3);
+				leveldesign.testKeys([&scene]() {scene = 6; });
 				start.testKeys([&scene]() {scene = 5; });
 				usertitle.testKeys([&scene]() {scene = 0; });
 				restore.testKeys([&]() 
@@ -404,7 +422,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					scene = 4;
 				});
 				break;
-
 			}
 			//*/游戏界面
 			case 4:
@@ -415,13 +432,37 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				next.testKeys([&]() 
 				{
 					//下一关
-					maplist.cursor++;
+					
+					maplist.next();
 					scene = 4;
 					std::string file;
 					maplist.getselect(file);
 					app::m.readMapFromFile(".\\maps\\" + file + ".xsbs");
 					app::u.lurd = "";
-					app::u.current = std::stoi(file);
+					try {
+						app::u.current = std::stoi(file);
+					}
+					catch (std::exception e) 
+					{
+
+					}
+				});
+				pre.testKeys([&]()
+				{
+					//前一关
+					maplist.pre();
+					scene = 4;
+					std::string file;
+					maplist.getselect(file);
+					app::m.readMapFromFile(".\\maps\\" + file + ".xsbs");
+					app::u.lurd = "";
+					try {
+						app::u.current = std::stoi(file);
+					}
+					catch (std::exception e)
+					{
+
+					}
 				});
 				backward.testKeys([&scene]()
 				{
@@ -457,6 +498,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				break;
 				//*/地图选择界面
 			case 5:
+				
+				reloadmaps(maplist);
 				app::input.getInput();
 				app::my2ddraw.draw(fun5);
 				gameback.testKeys([&scene]() {scene = 3; });
@@ -468,7 +511,13 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					maplist.getselect(file);
 					app::m.readMapFromFile(".\\maps\\" + file + ".xsbs");
 					app::u.lurd = "";
-					app::u.current = std::stoi( file);
+					try {
+						app::u.current = std::stoi(file);
+					}
+					catch(std::exception e)
+					{
+						e.what();
+					}
 				});
 				upload.testKeys([&maplist]()
 				{
@@ -493,13 +542,62 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				break;
 
 				//test
-			case -1:
-
-				app::my2ddraw.draw([hinst]()
+			case 6:
+				app::input.getInput();
+				app::my2ddraw.draw([hinst,&bs,&save,&gameback]()
 				{
-
-
+					gameback.draw();
+					save.draw();
+					app::brush.draw();
+					app::design.draw(bs);
+	
 				});
+				gameback.testKeys([&scene]() {scene = 3; });
+				save.testKeys([]() 
+				{
+					//空行统计
+					int countistart = -1;
+					int counti = -1;
+					//空列统计
+					int countj = 0;
+					
+					int j = 0;
+					for (int i = 0; i < 50; i++) 
+					{
+						for (j = 0; j < 50; j++) 
+						{
+							if (app::design.buf[i][j] != 0)
+								break;
+
+						}
+						if (countj > j)
+							countj = j;
+						if (j == 50)
+						{
+							if (counti == -1)
+								countistart = i;
+						}
+						else 
+						{
+							counti = i;
+						}
+					}
+					std::ofstream fout;
+					fout.open(".\\maps\\design.xsbs");
+					for (int i = countistart+1; i <= counti; i++)
+					{
+						for(int j=0;j<50-countj;j++)
+							if(app::design.buf[i][j + countj]!=0)  fout <<app::design.buf[i][j + countj];
+						fout << std::endl;
+					}
+					fout << std::endl;
+					fout << std::endl;
+					fout.close();
+					MessageBox(0, L"保存成功！", L"", 0);
+				});
+				app::design.testKeys(app::input, bs);
+				app::brush.testKeys(app::input, bs);
+				test << (int)bs;
 				break;
 			}
 
@@ -519,6 +617,8 @@ LRESULT _stdcall windProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		//app.cleanUp();
 		app::game.cleanup();
+		app::design.cleanup();
+		app::brush.cleanup();
 		app::input.cleanUp();
 		app::my2ddraw.cleanup();
 		app::client.clientCloseConnect();
@@ -561,9 +661,10 @@ void init(HWND hwnd, HINSTANCE hinst)
 {
 
 	app::client.clientConnectIni();
-	bool b = app::client.isConnected();
 	app::my2ddraw.init(hwnd);
 	app::game.init(hwnd, hinst, app::my2ddraw);
+	app::brush.ini(hinst, app::my2ddraw,hwnd);
+	app::design.ini(hinst, app::my2ddraw, hwnd);
 	//*/
 	//dinput
 	app::input.inputIni(hinst, hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
@@ -575,13 +676,7 @@ void loadmaps(cris::ListControl &maplist)
 	std::vector<std::string> maps;
 	wchar_t savepath[] = L".\\maps";
 	cris::findXSBs(savepath, maps);
-	std::sort(maps.begin(), maps.end(), [](std::string a, std::string b)->bool
-	{
-		int x = std::stoi(a);
-		int y = std::stoi(b);
-		return x < y;
-
-	});
+	std::sort(maps.begin(), maps.end(),cris::mystrcmp);
 	for (auto it = maps.begin(); it != maps.end(); it++)
 	{
 		it->erase(it->end() - 5, it->end());

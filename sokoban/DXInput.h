@@ -13,6 +13,7 @@ namespace cris {
 		LPDIRECTINPUTDEVICE8 m_lpKeyboardDevice;
 		CHAR m_keyBuffer[256] = { 0 };
 		DIMOUSESTATE m_mouseBuffer;
+		bool click = true;
 		Timer t;
 	public:
 		enum buttons {
@@ -31,6 +32,8 @@ namespace cris {
 		HRESULT getInput();
 
 		BOOL isKeyDown(INT iKey);
+
+		bool isClick(bool isMouseOn);
 
 		BOOL isMouseButtonDown(INT iButton);
 		

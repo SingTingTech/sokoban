@@ -205,6 +205,8 @@
     <Image Include="PNG\EndPoint_Blue.png" />
     <Image Include="PNG\GroundGravel_Grass.png" />
     <Image Include="PNG\Ground_Dirt.png" />
+    <Image Include="PNG\rubber.png" />
+    <Image Include="PNG\select.png" />
     <Image Include="PNG\Wall_Black.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

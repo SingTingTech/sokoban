@@ -47,6 +47,21 @@ BOOL cris::DXInput::isKeyDown(INT iKey)
 	return m_keyBuffer[iKey] & 0x80;
 }
 
+bool cris::DXInput::isClick(bool isMouseOn) 
+{
+	if (m_mouseBuffer.rgbButtons[LEFTBUTTON] & 0x80)
+	{
+		if (click&&isMouseOn)
+		{
+			click = false;
+			return true;	
+		}
+	}
+	else
+		click = true;
+	return false;
+}
+
 BOOL cris::DXInput::isMouseButtonDown(INT iButton)
 {
 	return m_mouseBuffer.rgbButtons[iButton] & 0x80;
