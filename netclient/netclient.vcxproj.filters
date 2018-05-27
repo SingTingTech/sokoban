@@ -24,12 +24,18 @@
     <ClCompile Include="dao.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="adminuploads.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dao.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="md5.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

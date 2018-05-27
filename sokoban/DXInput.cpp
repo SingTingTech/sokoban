@@ -51,10 +51,12 @@ bool cris::DXInput::isClick(bool isMouseOn)
 {
 	if (m_mouseBuffer.rgbButtons[LEFTBUTTON] & 0x80)
 	{
-		if (click&&isMouseOn)
+		if (click)
 		{
-			click = false;
-			return true;	
+			if (isMouseOn) {
+				click = false;
+				return true;
+			}
 		}
 	}
 	else

@@ -19,6 +19,7 @@ HRESULT cris::my2d::init(HWND hwnd) {
 		D2D1_FACTORY_TYPE_SINGLE_THREADED,
 		&pD2DFactory
 	);
+	
 	// Create a Direct2D render target	
 	HRESULT hr = pD2DFactory->CreateHwndRenderTarget(
 		D2D1::RenderTargetProperties(),
@@ -36,7 +37,7 @@ HRESULT cris::my2d::init(HWND hwnd) {
 	writeFactory->CreateTextFormat(L"·½Õýß÷ÎØÌå", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 40, L"", &textLarge);
 
 	
-	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &pGrayBrush);
+	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &pGrayBrush);
 	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Pink), &pLightBrush);
 	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightBlue), &pDarkBrush);
 	pRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightGreen), &pListBrush);

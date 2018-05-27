@@ -1,11 +1,9 @@
-#include <WinSock2.h>
-#include <windows.h>
-#include <iostream>
-#include <fstream>
-#include <WS2tcpip.h>
-#include <ctime>
-#include <vector>
+#include"stdafx.h"
 #include "dao.h"
+
+#ifndef TEST
+
+
 #pragma comment(lib,"ws2_32.lib")
 const int PORT = 9000;//端口号
 const std::string mapdir = "./maps/";//地图存储文件夹
@@ -16,12 +14,9 @@ CRITICAL_SECTION mapnamectrl;//临界区对mapname的操作互斥
 // 每调用一次向缓冲区中送入下1024个数据
 class MapStream
 {
-	std::vector<MapInfo> maps;
-	//当前传输到哪一个地图了
-	std::vector<MapInfo>::iterator MapIterator;
 	//当前传输到地图的哪一个位置了
 	std::ifstream fin;
-
+	std::string mappath;
 	bool first;
 public:
 	MapStream()
@@ -29,11 +24,11 @@ public:
 
 
 	}
-	void openMaps(std::vector<MapInfo> map)
+	void openMaps(std::string mappath)
 	{
 		first = true;
-		maps = map;
-		MapIterator = maps.begin();
+		fin.open(mappath);
+		this->mappath = mappath;
 	}
 
 
@@ -42,21 +37,25 @@ public:
 		if (first)
 		{
 			first = false;
-			fin.open(MapIterator->mappath, std::ios::in);
-
+			buf[0] = 'd';
+			std::string s = mappath;
+			s.erase(s.end() - 5, s.end());
+			s.erase(s.begin(), s.begin() + 7);
+			buf[1] = (int)std::stoi(s);
+			fin.read(buf + 2, 1022);
 		}
-		buf[0] = 'd';
-		fin.read(buf + 1, 1023);
-
-		if (fin.eof())
+		else 
 		{
-			int readCount = fin.gcount();
-			buf[readCount++] = ';';
-			fin.close();
-			MapIterator++;
-			fin.open(MapIterator->mappath);
-			fin.read(buf + readCount, 1024 - readCount);
+			buf[0] = 't';
+			fin.read(buf + 1, 1023);
 		}
+	
+		if (fin.eof()) 
+		{
+			fin.close();
+			fin.clear();
+		}
+		
 	}
 
 
@@ -240,6 +239,20 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				}
 				break;
 			}
+
+			case 'd'://下载地图请求
+			{
+				std::string path;
+				std::ostringstream strstream;
+				strstream << ".\\maps\\"<<(int)buf[1]<<".xsbs";
+				path = strstream.str();
+				ms.openMaps(path);
+				ms >> buf;
+				isSent = false;
+				break;
+
+
+			}
 			case 'v'://反复请求
 			{
 				ms >> buf;
@@ -247,20 +260,10 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				break;
 			}
 
-			case 'd'://下载地图请求
-			{
-				std::vector<MapInfo> maps;
-				d.getMaps(userName, maps);
-				ms.openMaps(maps);
-				ms >> buf;
-				isSent = false;
-				break;
-
-
-			}
 
 			case 'm':
-				;
+			
+
 
 				std::vector<MapInfo> maps;
 				d.getMaps(userName, maps);
@@ -270,9 +273,9 @@ DWORD WINAPI clientProc(LPARAM lparam)
 				for (auto it = maps.begin(); it != maps.end(); ++it)
 				{
 					std::string s = it->mappath;
-					s.erase(s.end() - 5);
-					int i = std::stoi(s);
-					buf[i++] = i;
+					s.erase(s.end() - 5,s.end());
+					s.erase(s.begin(), s.begin() + 7);
+					buf[i++] = std::stoi(s);
 				}
 				isSent = false;
 			}
@@ -398,3 +401,4 @@ int main()
 	ServerSocket(PORT);
 	std::cin.get();
 }
+#endif // TEST

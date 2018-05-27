@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="adminuploads.cpp" />
     <ClCompile Include="dao.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="server.cpp" />
@@ -156,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="dao.h" />
     <ClInclude Include="md5.h" />
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

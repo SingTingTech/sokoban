@@ -25,9 +25,10 @@ public:
 			buf[1] = isPrivate ? 't' : 'f';
 			fin.read(buf + 2, 1022);
 		}
-		else
+		else {
 			buf[0] = 't';
-		fin.read(buf + 1, 1023);
+			fin.read(buf + 1, 1023);
+		}
 	}
 	~MapStream()
 	{

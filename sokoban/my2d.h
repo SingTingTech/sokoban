@@ -4,43 +4,30 @@ namespace cris{
 	class my2d
 	{
 
-		HRESULT binit;
-		HWND hwnd;
-		RECT clientrc;
-		ID2D1Factory* pD2DFactory = NULL;
-
-
-
-
-		IDWriteFactory * writeFactory;
+		HRESULT binit;//是否已初始化
+		HWND hwnd;//绘制目标窗口句柄
+		RECT clientrc;//窗口区域
+		ID2D1Factory* pD2DFactory = NULL;//d2d工厂
+		IDWriteFactory * writeFactory;//Dwrite字体工厂
 
 	public:
 		
-		IDWriteTextFormat * textNormal;
-		IDWriteTextFormat * textSmall;
-		IDWriteTextFormat * textLarge;
-
-		ID2D1LinearGradientBrush *pBgBrush;
-		//dark gray
-		ID2D1SolidColorBrush *pGrayBrush;
-		//pink
-		ID2D1SolidColorBrush *pLightBrush;
-		//dark blue
-		ID2D1SolidColorBrush *pDarkBrush;
-		//light green
-		ID2D1SolidColorBrush *pListBrush;
-		ID2D1HwndRenderTarget* pRT = NULL;
-
-
-
-		my2d(HWND hwnd);
-
-		my2d();
-
-		HRESULT init(HWND hwnd);
-
+		IDWriteTextFormat * textNormal;//通常字体
+		IDWriteTextFormat * textSmall;//较小字体
+		IDWriteTextFormat * textLarge;//较大字体
+		ID2D1LinearGradientBrush *pBgBrush;//背景渐变画刷
+		ID2D1SolidColorBrush *pGrayBrush;//dark gray
+		ID2D1SolidColorBrush *pLightBrush;//pink
+		ID2D1SolidColorBrush *pDarkBrush;//dark blue
+		ID2D1SolidColorBrush *pListBrush;//light green
+		ID2D1HwndRenderTarget* pRT = NULL;//渲染对象
+		my2d(HWND hwnd);//使用hwnd指向的窗口构造一个绘图器
+		my2d();//默认构造
+		HRESULT init(HWND hwnd); //使用hwnd指向的窗口初始化一个绘图器
+		//模板绘图函数T为一个函数指针或一个lambda对象
 		template<typename T>
 		HRESULT draw(T);
+		//清理内存
 		void cleanup()
 		{
 			pBgBrush->Release();

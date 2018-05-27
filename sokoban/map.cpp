@@ -110,6 +110,10 @@ cris::map::map(std::string fileName)
 
 void cris::map::readMapFromFile(std::string fileName)
 {
+	std::fstream file;
+	file.open(fileName, std::ios::in);
+	if (!file)
+		return;
 	mappath = fileName;
 	cleanup();
 	int width = 0;
@@ -117,8 +121,7 @@ void cris::map::readMapFromFile(std::string fileName)
 	int lineNum = 0;
 	std::string line;
 	bool f = false;
-	std::fstream file;
-	file.open(fileName, std::ios::in);
+
 	while (!file.eof())
 	{
 		height++;

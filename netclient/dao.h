@@ -1,11 +1,5 @@
 #pragma once
-#include<windows.h>
-#include<sql.h>
-#include<sqltypes.h>
-#include<sqlext.h>
-#include<odbcss.h>
-#include<iostream>
-#include<vector>
+#include"stdafx.h"
 #include"md5.h"
 
 

@@ -1,0 +1,15 @@
+#pragma once
+//#define TEST
+#include <string>
+#include <WinSock2.h>
+#include <windows.h>
+#include <iostream>
+#include <fstream>
+#include <WS2tcpip.h>
+#include <ctime>
+#include <vector>
+#include <sql.h>
+#include <sqltypes.h>
+#include <sqlext.h>
+#include <odbcss.h>
+#include <sstream>

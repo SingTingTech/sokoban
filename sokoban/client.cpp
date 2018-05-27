@@ -121,9 +121,10 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		loadsaves(userlist);
 		app::username.setCursor(ibeam);
 		app::passwd.setCursor(ibeam);
-		loadmaps(maplist);
 		std::cout;
 		init(hwnd, hinst);
+		loadmaps(maplist);
+
 	}
 
 
@@ -143,7 +144,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	{
 
 		cris::TextControl title = { 376,100,50,25,L"登陆" };
-		cris::TextControl username1 = { 225, 200,75,25,L"用户名:" };
+		cris::TextControl username1 = { 200, 200,100,25,L"用户名:" };
 		cris::TextControl password1 = { 225, 300,75,25,L"密码:" };
 		title.setCursor(arrow);
 		submit.draw();
@@ -160,7 +161,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 	{
 
 		cris::TextControl title = { 376,100,50,25,L"注册" };
-		cris::TextControl username1 = { 225, 200,75,25,L"用户名:" };
+		cris::TextControl username1 = { 200, 200,100,25,L"用户名:" };
 		cris::TextControl password1 = { 225, 300,75,25,L"密码:" };
 		title.setCursor(arrow);
 		submit.draw();
@@ -219,6 +220,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		gameback.draw();
 		levelstart.draw();
 		upload.draw();
+		download.draw();
 	};
 	//登陆监测
 	if (!app::u.getLogin()) {
@@ -238,33 +240,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 		app::client.clientRecv(buf, 1024);
 
 	}
-	//地图对比；
-	{
-		//服务器获取地图列表
-		char buf[1024];
-		buf[0] = 'm';
-		app::client.clientSend(buf, 1024);
-		memset(buf, 0, 1024);
-		app::client.clientRecv(buf, 1024);
-		std::vector<std::string> maps;
 
-		//本地地图列表
-		wchar_t savepath[] = L".\\maps";
-		cris::findXSBs(savepath, maps);
-		//排序方便查找
-		std::sort(maps.begin(), maps.end(), cris::mystrcmp);
-		for (int i = 0; i < 1024; i++)
-		{
-			if (buf[i] == 0)
-			{
-				break;
-			}
-			//二分查找
-			bool b = std::binary_search(maps.begin(), maps.end(), std::to_string((int)buf[i]) + ".xsbs");
-			if (!b)
-				maplist.addstring(std::to_string((int)buf[i]) + ".xsbs\t未下载");
-		}
-	}
 	MSG msg = { 0 };
 	while (msg.message != WM_QUIT)
 	{
@@ -303,6 +279,17 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				app::my2ddraw.draw(fun2);
 				submit.testKeys([&scene, hwnd]()
 				{
+					if (wcslen(app::username.controlText) > 20)
+					{
+						MessageBox(0, L"用户名过长", 0, 0);
+						return;
+					}
+					if ( wcslen(app::passwd.controlText) > 20)
+					{
+						MessageBox(0, L"密码过长", 0, 0);
+						return;
+					}
+
 					char buf[1024];
 					char lusername[20];
 					char lpasswd[30];
@@ -499,7 +486,6 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				//*/地图选择界面
 			case 5:
 				
-				reloadmaps(maplist);
 				app::input.getInput();
 				app::my2ddraw.draw(fun5);
 				gameback.testKeys([&scene]() {scene = 3; });
@@ -523,6 +509,8 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				{
 					std::string file;
 					maplist.getselect(file);
+					if (file != "design")
+						MessageBox(0, L"此地图无法上传！", 0, 0);
 					MapStream map = { ".\\maps\\" + file + ".xsbs" ,true };
 					char buf[1024];
 					do {
@@ -537,7 +525,64 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 						MessageBox(0, L"上传成功", L"上传成功", 0);
 
 				});
+				download.testKeys([&maplist]() 
+				{
+					
+					std::string file;
+					maplist.getselect(file);
+					if (file.size()>=8)
+					{
+						std::ofstream fout;
+						int mapout = 0, mapin = 2;
+						char mapdata[4096] = { 0 };
+						char filename[64] = { 0 };
+						char buf[1024] = { 0 };
+						buf[0] = 'd';
+						file.erase(file.end() - 5, file.end());
+						try {
+							buf[1] = std::stoi(file);
+							app::client.clientSend(buf, 1024);
+							memset(buf, 0, 1024);
+							app::client.clientRecv(buf, 1024);
+						}
+						catch (std::exception e)
+						{
 
+							e.what();
+						}
+						if (buf[0] == 'd') 
+						{
+							sprintf_s(filename, ".\\maps\\%d.xsbs", (int)buf[1]);
+						}
+						while(buf[mapin]!=0)
+						{
+							
+							while (mapout < 4096 && mapin < 1024 && buf[mapin]!=0) {
+								mapdata[mapout++] = buf[mapin++];
+							}
+							if (mapin == 1024) 
+							{
+								memset(buf, 0, 1024);
+								buf[0] = 'v';
+								app::client.clientSend(buf, 1024);
+								memset(buf, 0, 1024);
+								app::client.clientRecv(buf, 1024);
+								mapin = 0;
+							}
+							
+						}; 
+						fout.open(filename);
+						fout << mapdata;
+						fout.close();
+						fout.clear();
+						reloadmaps(maplist);
+					}
+					else 
+					{
+						MessageBox(0, L"此地图已下载", 0, 0);
+					}
+					reloadmaps(maplist);
+				});
 
 				break;
 
@@ -673,9 +718,31 @@ void init(HWND hwnd, HINSTANCE hinst)
 }
 void loadmaps(cris::ListControl &maplist)
 {
+	char buf[1024] = {0};
+	buf[0] = 'm';
+	app::client.clientSend(buf, 1024);
+	memset(buf, 0, 1024);
+	app::client.clientRecv(buf, 1024);
 	std::vector<std::string> maps;
+
+	//本地地图列表
 	wchar_t savepath[] = L".\\maps";
 	cris::findXSBs(savepath, maps);
+	//排序方便查找
+	for (int i = 1; i < 1024; i++)
+	{
+		if (buf[i] == 0)
+		{
+			break;
+		}
+		//二分查找
+		auto it = std::find(maps.begin(), maps.end(), std::to_string((int)buf[i]) + ".xsbs");
+	
+		//bool b = std::binary_search(maps.begin(), maps.end(), std::to_string((int)buf[i]) + ".xsbs",cris::mystrcmp);
+		if (it==maps.end())
+			maps.push_back(std::to_string((int)buf[i]) + "\t未下载.xsbs");
+	}
+
 	std::sort(maps.begin(), maps.end(),cris::mystrcmp);
 	for (auto it = maps.begin(); it != maps.end(); it++)
 	{

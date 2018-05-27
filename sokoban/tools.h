@@ -7,7 +7,6 @@ namespace cris {
 		wchar_t szFind[MAX_PATH];
 		WIN32_FIND_DATA FindFileData;
 		wcscpy_s(szFind, lpPath);
-		wcscpy_s(szFind, lpPath);
 		wcscat_s(szFind, L"\\*.save");
 
 		HANDLE hFind = ::FindFirstFile(szFind, &FindFileData);
@@ -30,7 +29,6 @@ namespace cris {
 	{
 		wchar_t szFind[MAX_PATH];
 		WIN32_FIND_DATA FindFileData;
-		wcscpy_s(szFind, lpPath);
 		wcscpy_s(szFind, lpPath);
 		wcscat_s(szFind, L"\\*.xsbs");
 

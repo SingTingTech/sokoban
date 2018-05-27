@@ -14,21 +14,23 @@ namespace cris
 	protected:
 		//static bool click;
 
-		//HWND hwnd;	//父窗口句柄
-		HCURSOR hcursor;
+		HWND hwnd;	//父窗口句柄
+		HCURSOR hcursor;//光标句柄
 		D2D1_RECT_F size;//窗口大小
 	public:
-		static HWND shwnd;
-		static HCURSOR shcur;
-		static cris::my2d &smy2d;
-		static cris::DXInput &sinput;
-		static unsigned int focus;
+		static HWND shwnd;//指向公共父窗口的句柄
+		static HCURSOR shcur;//指向默认光标的句柄
+		static cris::my2d &smy2d;//指向公共绘图器的引用
+		static cris::DXInput &sinput;//指向公共控制管理器的引用
+		static unsigned int focus;//指示当前控件是否为焦点
+		//使用（x,y）为起点，width为宽度，height为高度构造一个控件
 		Control(float x, float y, float width, float height) {
 			size.left = x;
 			size.right = x + width;
 			size.top = y;
 			size.bottom = y + height;
 		}
+		//判断是否鼠标在此控件上
 		bool mouseOn()
 		{
 			POINT p;
@@ -36,7 +38,9 @@ namespace cris
 			ScreenToClient(shwnd, &p);
 			return p.x<size.right&&p.x>size.left&&p.y > size.top&&p.y < size.bottom;
 		}
+		//控件文本
 		wchar_t controlText[1024];
+		//虚函数，用于管理控件的具体绘制
 		virtual void draw() //绘制
 		{
 
@@ -48,15 +52,18 @@ namespace cris
 
 
 		}
+		//模板函数，用于处理控件的控制消息T为一个函数指针或一个lambda对象
 		template<class T>
 		void testKeys(T t)
 		{
 
-		};//获取按键信息
+		};
+		//设置光标
 		virtual void setCursor(HCURSOR hcursor)
 		{
 			this->hcursor = hcursor;
 		}
+		//设置父窗口
 		virtual void setWnd(HWND hwnd)
 		{
 			this->shwnd = hwnd;
@@ -82,7 +89,6 @@ namespace cris
 		}
 		virtual void draw()
 		{
-
 			Control::draw();
 			smy2d.pRT->DrawText(controlText, wcslen(controlText),
 				smy2d.textNormal,
@@ -90,15 +96,11 @@ namespace cris
 				smy2d.pGrayBrush);
 		};
 		template<class T>
-
 		void testKeys(T t) {
 
 			if (sinput.isClick(mouseOn()))
 			{
-
 				t();
-
-
 			}
 
 		}
@@ -113,7 +115,6 @@ namespace cris
 			NORMAL,
 			PASSWD
 		};
-
 		unsigned int id;
 		EditType type;
 		int cur = 0;//光标位置
@@ -125,7 +126,6 @@ namespace cris
 		//获取输入
 		virtual void onInput(wchar_t ch)
 		{
-
 			if (ch == 8 && cur > 0)controlText[--cur] = 0;
 			if ((ch > 6 && ch < 14) || ch == 27 || ch == 32)
 				return;
@@ -315,13 +315,19 @@ namespace cris
 				moveBar += i / (50.0f*(fullSize / controlHeight));
 				moveBar = moveBar > 1 ? 1 : moveBar < 0 ? 0 : moveBar;
 			}
+			if (mouseOn()) 
+			{
+				int i = sinput.getMouseZCoordinate();
+				moveBar -= i / (50.0f*(fullSize / controlHeight));
+				moveBar = moveBar > 1 ? 1 : moveBar < 0 ? 0 : moveBar;
 
+			}
 			
 			//*/鼠标监测
 		}
 		void next()
 		{
-			if (++cursor >= list.size())
+			if (++cursor >= list.size()||list[cursor].length()>=8)
 				cursor--;
 		}
 		void pre() 
@@ -343,8 +349,6 @@ namespace cris
 			Control::draw();
 			//bg
 			smy2d.pRT->FillRectangle(size, smy2d.pGrayBrush);
-
-
 			if (isSelected)//checked
 				smy2d.pRT->FillRectangle(D2D1::RectF(size.left + 2.5, size.top + 2.5, size.right - 2.5, size.bottom - 2.5), smy2d.pDarkBrush);
 			else//unchecked			

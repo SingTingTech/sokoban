@@ -166,7 +166,7 @@ void Dao::getMaps(char * user,std::vector<MapInfo> &mapInfos)
 	UCHAR mappath[256] = { 0 };
 	UCHAR solutionpath[256] = { 0 };
 	bool isprivate;
-	UCHAR x[] = "SELECT MAPPATH,SOLUTIONPATH,PRIVATE FROM MAP WHERE USERID=? OR PRIVATE=TRUE ORDER BY MAPID;";
+	UCHAR x[] = "SELECT MAPPATH,SOLUTIONPATH,PRIVATE FROM MAP WHERE USERID=? OR PRIVATE=FALSE ORDER BY MAPID;";
 	RETCODE ret;
 	SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 	ret = SQLPrepare(hstmt, x, strlen((char*)x));
