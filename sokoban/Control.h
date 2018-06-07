@@ -443,6 +443,9 @@ namespace cris
 			bot.cleanup();
 
 		}
+#define RECTIJ(i,j) D2D1::RectF(j * scaler+sp.x, i * scaler+sp.y, (j + 1) * scaler+sp.x, (i + 1) * scaler+sp.y)
+#define HUMANRECT(i,j)  D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler +sp.x, i*scaler+sp.y, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler+sp.x, (i + 1) * scaler+sp.y)
+
 		void draw()
 		{
 			scaler = m.getHeight() < m.getWidth() ? m.getWidth() : m.getHeight();
@@ -459,8 +462,6 @@ namespace cris
 				{
 					switch (m[i][j])
 					{
-#define RECTIJ(i,j) D2D1::RectF(j * scaler+sp.x, i * scaler+sp.y, (j + 1) * scaler+sp.x, (i + 1) * scaler+sp.y)
-#define HUMANRECT(i,j)  D2D1::RectF((59.0 - 37) / 2 / 59 * scaler + j*scaler +sp.x, i*scaler+sp.y, (j + 1) * scaler - (59.0 - 37) / 2 / 59 * scaler+sp.x, (i + 1) * scaler+sp.y)
 
 						//Ïä×Ó
 					case 1:

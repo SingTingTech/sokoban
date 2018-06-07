@@ -398,14 +398,48 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 				leveldesign.testKeys([&scene]() {scene = 6; });
 				start.testKeys([&scene]() {scene = 5; });
 				usertitle.testKeys([&scene]() {scene = 0; });
-				restore.testKeys([&]() 
+				restore.testKeys([&]()
 				{
-					maplist.cursor = app::u.current;
-					std::string file;
-					maplist.getselect(file);
-					app::m.readMapFromFile(".\\maps\\" + file + ".xsbs");
-					app::u.lurd = "";
-					app::u.current = std::stoi(file);
+					if (app::u.current == -1)
+					{
+						maplist.cursor = maplist.list.size() - 1;
+						app::m.readMapFromFile(".\\maps\\design.xsbs");
+					}
+					else
+					{
+						for (auto it = maplist.list.begin(); it != maplist.list.end(); ++it)
+						{
+							try 
+							{
+								if (std::stoi(*it) == app::u.current)
+									maplist.cursor = app::u.current;
+							}
+							catch (std::exception e) 
+							{
+								break;
+							}
+						}
+						std::string file = std::to_string(app::u.current);
+						app::m.readMapFromFile(".\\maps\\" + file + ".xsbs");
+					}
+					for (auto it = app::u.lurd.begin(); it != app::u.lurd.end(); ++it)
+					{
+						switch (*it) 
+						{
+						case 'l':
+							app::m.step(cris::left);
+							break;
+						case 'u':
+							app::m.step(cris::up);
+							break;
+						case 'r':
+							app::m.step(cris::right);
+							break;
+						case 'd':
+							app::m.step(cris::down);
+							break;
+						}					
+					}
 					scene = 4;
 				});
 				break;
@@ -502,7 +536,7 @@ INT _stdcall WinMain(HINSTANCE hinst, HINSTANCE hPreinst
 					}
 					catch(std::exception e)
 					{
-						e.what();
+						app::u.current = -1;
 					}
 				});
 				upload.testKeys([&maplist]()
@@ -720,29 +754,25 @@ void loadmaps(cris::ListControl &maplist)
 {
 	char buf[1024] = {0};
 	buf[0] = 'm';
+	//获取服务器端地图列表
 	app::client.clientSend(buf, 1024);
 	memset(buf, 0, 1024);
 	app::client.clientRecv(buf, 1024);
 	std::vector<std::string> maps;
-
-	//本地地图列表
+	//加载本地地图列表
 	wchar_t savepath[] = L".\\maps";
 	cris::findXSBs(savepath, maps);
-	//排序方便查找
+	//将服务器端数据与本地数据进行对比
 	for (int i = 1; i < 1024; i++)
 	{
 		if (buf[i] == 0)
 		{
 			break;
 		}
-		//二分查找
 		auto it = std::find(maps.begin(), maps.end(), std::to_string((int)buf[i]) + ".xsbs");
-	
-		//bool b = std::binary_search(maps.begin(), maps.end(), std::to_string((int)buf[i]) + ".xsbs",cris::mystrcmp);
-		if (it==maps.end())
+		if (it==maps.end())//将客户端没有的数据插入maps
 			maps.push_back(std::to_string((int)buf[i]) + "\t未下载.xsbs");
 	}
-
 	std::sort(maps.begin(), maps.end(),cris::mystrcmp);
 	for (auto it = maps.begin(); it != maps.end(); it++)
 	{
